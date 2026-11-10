@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home - Panel</title>
+<style>
+:root{
+  --bg:#0C0B09;
+  --surface:rgba(255,245,225,.04);
+  --surface2:rgba(255,245,225,.06);
+  --glass:rgba(255,245,225,.03);
+  --glass-border:rgba(224,168,90,.12);
+  --glass-border-hover:rgba(224,168,90,.25);
+  --fg:#F0E8D8;--fg2:#C8B8A0;--fg3:#A08870;--fg4:#685840;
+  --accent:#E0A85A;--accent2:#C89240;--accent-glow:rgba(224,168,90,.15);
+  --green:#6DBF5A;--green-bg:rgba(109,191,90,.08);--green-glow:rgba(109,191,90,.12);
+  --red:#D45A5A;--red-bg:rgba(212,90,90,.08);--red-glow:rgba(212,90,90,.12);
+  --yellow:#D4B84A;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'SF Mono',ui-monospace,'Cascadia Code',Menlo,monospace;
+  --r:12px;--r2:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:rgba(224,168,90,.3);color:#fff}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glowPulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes dotAlive{0%,100%{box-shadow:0 0 4px 1px rgba(109,191,90,.3)}50%{box-shadow:0 0 8px 2px rgba(109,191,90,.5)}}
+@keyframes barShimmer{0%{background-position:-300% 0}100%{background-position:300% 0}}
+
+.header{position:sticky;top:0;z-index:10;background:rgba(12,11,9,.85);border-bottom:1px solid var(--glass-border);padding:14px 24px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#E0A85A,#C89240);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.logo::after{content:'';position:absolute;inset:-3px;border-radius:13px;background:linear-gradient(135deg,rgba(224,168,90,.25),transparent);z-index:-1;animation:glowPulse 4s ease-in-out infinite}
+.logo svg{width:18px;height:18px;fill:none;stroke:#1B1A18;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hdr-title{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.hdr-title span{color:var(--fg3);font-weight:400;font-size:12px;margin-left:6px}
+.hdr-r{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12px;color:var(--fg3)}
+.hdr-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;transition:all .4s}
+.hdr-dot.on{background:var(--green);animation:dotAlive 2s ease-in-out infinite}
+.hdr-dot.off{background:var(--red);box-shadow:0 0 6px rgba(212,90,90,.4)}
+
+.wrap{max-width:960px;margin:0 auto;padding:20px 20px 40px}
+
+.glass{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r2);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);transition:border-color .3s}
+.glass:hover{border-color:var(--glass-border-hover)}
+
+.timeline{display:flex;align-items:center;gap:0;padding:14px 16px;margin-bottom:18px;animation:fadeIn .5s ease-out both}
+.tl-step{flex:1;display:flex;align-items:center;gap:8px;position:relative}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:50%;right:0;width:calc(100% - 40px);height:2px;background:rgba(224,168,90,.08);transform:translateY(-50%);z-index:0;margin-left:40px;left:36px}
+.tl-step:not(:last-child).done::after{background:var(--green)}
+.tl-step:not(:last-child).active::after{background:linear-gradient(90deg,var(--accent),rgba(224,168,90,.15))}
+.tl-n{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;position:relative;z-index:1;transition:all .35s;background:rgba(255,245,225,.06);color:var(--fg4);border:1px solid rgba(255,245,225,.08)}
+.tl-step.done .tl-n{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 0 10px rgba(109,191,90,.3)}
+.tl-step.active .tl-n{background:var(--accent);color:#0C0B09;border-color:var(--accent);box-shadow:0 0 12px rgba(224,168,90,.35)}
+.tl-txt{font-size:12px;font-weight:600;color:var(--fg4);white-space:nowrap;transition:color .3s}
+.tl-step.done .tl-txt{color:var(--green)}
+.tl-step.active .tl-txt{color:var(--accent)}
+@media(max-width:600px){.tl-txt{display:none}.tl-step:not(:last-child)::after{width:calc(100% - 28px);left:28px}}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+
+.card{overflow:hidden;animation:fadeIn .5s ease-out both}
+.card:nth-child(1){animation-delay:.1s}
+.card:nth-child(2){animation-delay:.15s}
+.card:nth-child(3){animation-delay:.2s}
+.card:nth-child(4){animation-delay:.25s}
+.card:nth-child(5){animation-delay:.3s}
+.card-h{padding:10px 14px;border-bottom:1px solid rgba(224,168,90,.08);display:flex;align-items:center;gap:8px}
+.card-h svg{width:14px;height:14px;fill:none;stroke:var(--fg3);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.card-h h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--fg3)}
+.card-h .tag{margin-left:auto;font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;transition:all .3s}
+.card-b{padding:14px}
+
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px}
+.svc{background:rgba(255,245,225,.03);border:1px solid rgba(224,168,90,.06);border-radius:var(--r);padding:8px 10px;transition:all .25s;cursor:default}
+.svc:hover{border-color:rgba(224,168,90,.2);background:rgba(224,168,90,.04)}
+.svc-top{display:flex;align-items:center;gap:5px}
+.svc-name{font-size:11px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svc-port{font-size:10px;color:var(--fg4);font-family:var(--mono)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;transition:all .4s}
+.dot.on{background:var(--green);animation:dotAlive 2.5s ease-in-out infinite}
+.dot.off{background:var(--red);box-shadow:0 0 5px rgba(212,90,90,.35)}
+
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10px;font-weight:600;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.field input{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(224,168,90,.1);border-radius:10px;padding:8px 12px;color:var(--fg);font-size:13px;font-family:var(--sans);outline:none;transition:all .25s}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(224,168,90,.1)}
+.field input::placeholder{color:var(--fg4)}
+.btn{background:rgba(255,245,225,.05);border:1px solid rgba(224,168,90,.12);border-radius:10px;padding:7px 12px;color:var(--fg2);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s;font-family:var(--sans)}
+.btn:hover{background:rgba(224,168,90,.1);border-color:rgba(224,168,90,.3);color:var(--accent)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0C0B09;border:none;font-weight:700;box-shadow:0 2px 12px rgba(224,168,90,.25)}
+.btn.primary:hover{box-shadow:0 4px 20px rgba(224,168,90,.35)}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap}
+
+.ota-phases{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:600px){.ota-phases{grid-template-columns:1fr}}
+.ota-phase{background:rgba(0,0,0,.2);border:1px solid rgba(224,168,90,.08);border-radius:var(--r);padding:10px 12px;position:relative;overflow:hidden}
+.ota-phase.active{border-color:rgba(224,168,90,.25)}
+.ota-phase.done{border-color:rgba(109,191,90,.2)}
+.ota-phase-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.ota-phase-num{width:20px;height:20px;border-radius:50%;background:rgba(255,245,225,.06);border:1px solid rgba(255,245,225,.08);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--fg4);flex-shrink:0}
+.ota-phase.active .ota-phase-num{background:var(--accent);color:#0C0B09;border-color:var(--accent)}
+.ota-phase.done .ota-phase-num{background:var(--green);color:#fff;border-color:var(--green)}
+.ota-phase-title{font-size:12px;font-weight:700;color:var(--fg2)}
+.ota-phase.active .ota-phase-title{color:var(--accent)}
+.ota-phase.done .ota-phase-title{color:var(--green)}
+.ota-phase-desc{font-size:10px;color:var(--fg4);line-height:1.4;margin-bottom:4px}
+.ota-phase-file{font-family:var(--mono);font-size:10px;color:var(--fg3)}
+.ota-phase-size{font-family:var(--mono);font-size:10px;color:var(--fg4)}
+
+.ota-bar{height:18px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid rgba(224,168,90,.08);overflow:hidden;margin:10px 0;position:relative}
+.ota-fill{height:100%;border-radius:10px;transition:width .6s ease;min-width:0;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.ota-fill.active{background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));background-size:300% 100%;animation:barShimmer 2.5s linear infinite}
+
+.info-grid{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px;align-items:baseline}
+.info-grid dt{color:var(--fg3)}
+.info-grid dd{color:var(--fg);font-family:var(--mono);text-align:right}
+
+.log-wrap{max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(224,168,90,.15) transparent}
+.log-wrap::-webkit-scrollbar{width:4px}
+.log-wrap::-webkit-scrollbar-track{background:transparent}
+.log-wrap::-webkit-scrollbar-thumb{background:rgba(224,168,90,.2);border-radius:2px}
+.log-line{font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 4px;border-radius:4px;transition:background .15s}
+.log-line:hover{background:rgba(255,245,225,.03)}
+.log-line .ts{color:var(--fg4)}
+.log-line .ok{color:var(--green)}
+.log-line .err{color:var(--red)}
+.log-line .warn{color:var(--yellow)}
+
+.empty{text-align:center;padding:24px;color:var(--fg4);font-size:12px}
+.empty svg{width:36px;height:36px;fill:none;stroke:var(--fg4);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;margin:0 auto 8px;display:block;opacity:.5}
+
+.toast{position:fixed;bottom:20px;right:20px;background:rgba(30,28,24,.9);border:1px solid rgba(224,168,90,.2);border-radius:var(--r);padding:10px 16px;font-size:13px;color:var(--accent);box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(60px);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1);z-index:100;pointer-events:none;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.toast.show{transform:translateY(0);opacity:1}
+</style>
+</head><body>
+
+<div class="header">
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2"/></svg></div>
+  <div class="hdr-title">Home <span>Panel</span></div>
+  <div class="hdr-r">
+    <span><span class="hdr-dot" id="h-dot"></span><span id="h-status">-</span></span>
+    <span id="h-time" style="font-family:var(--mono)">--:--</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="timeline glass" id="timeline">
+    <div class="tl-step" data-s="0"><span class="tl-n">1</span><span class="tl-txt">Conexion</span></div>
+    <div class="tl-step" data-s="1"><span class="tl-n">2</span><span class="tl-txt">OTA Pivot</span></div>
+    <div class="tl-step" data-s="2"><span class="tl-n">3</span><span class="tl-txt">Home ROM</span></div>
+    <div class="tl-step" data-s="3"><span class="tl-n">4</span><span class="tl-txt">Completado</span></div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card glass">
+      <div class="card-h">
+        <svg viewBox="0 0 24 24"><path d="M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+        <h2>Servicios</h2>
+        <span class="tag" id="svc-tag" style="background:var(--accent-glow);color:var(--accent);border:1px solid rgba(224,168,90,.2)">-</span>
+      </div>
+      <div class="card-b">
+        <div class="svc-grid" id="svc-grid"></div>
+        <div style="margin-top:10px">
+          <button class="btn" onclick="restartAll()">Reiniciar todos</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-h">
+        <svg viewBox="0 0 24 24"><path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01M4.93 12.93a10 10 0 0114.14 0M1.394 9.393a14 14 0 0121.213 0"/></svg>
+        <h2>WiFi</h2>
+        <span class="tag" style="background:var(--accent-glow);color:var(--accent);border:1px solid rgba(224,168,90,.2)">5 GHz</span>
+      </div>
+      <div class="card-b">
+        <div class="field"><label>SSID</label><input type="text" id="w-ssid" value="Home-migracion" placeholder="Home-migracion"></div>
+        <div class="field"><label>Contrasena</label><input type="text" id="w-pass" value="homeupdate" placeholder="homeupdate"></div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="saveWifi()">Guardar y reiniciar</button>
+          <button class="btn" onclick="restartWifi()">Reiniciar AP</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glass full">
+      <div class="card-h">
+        <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <h2>OTA</h2>
+        <span class="tag" id="ota-tag" style="background:var(--accent-glow);color:var(--accent);border:1px solid rgba(224,168,90,.2)">-</span>
+      </div>
+      <div class="card-b">
+        <div class="ota-phases">
+          <div class="ota-phase" id="ota-c1">
+            <div class="ota-phase-head">
+              <span class="ota-phase-num">1</span>
+              <span class="ota-phase-title">OTA Pivot</span>
+            </div>
+            <div class="ota-phase-desc">Recovery que abre la puerta para instalar Home</div>
+            <div class="ota-phase-file">pivot_ota_rg3205w_home.zip</div>
+            <div class="ota-phase-size">~1.1 MB</div>
+          </div>
+          <div class="ota-phase" id="ota-c2">
+            <div class="ota-phase-head">
+              <span class="ota-phase-num">2</span>
+              <span class="ota-phase-title">Home ROM</span>
+            </div>
+            <div class="ota-phase-desc">ROM completa — LineageOS 22.x / Android 15</div>
+            <div class="ota-phase-file">Home-ota-rg3205w.zip</div>
+            <div class="ota-phase-size">~1.03 GB</div>
+          </div>
+        </div>
+        <div class="ota-bar"><div class="ota-fill" id="ota-bar" style="width:0%"></div></div>
+        <div class="info-grid" id="ota-info">
+          <dt>Estado</dt><dd id="ota-state">Esperando dispositivo</dd>
+          <dt>Fase</dt><dd id="ota-cycle">-</dd>
+          <dt>Archivo</dt><dd id="ota-file">-</dd>
+          <dt>Descarga</dt><dd id="ota-dl">-</dd>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-h">
+        <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        <h2>Dispositivo</h2>
+      </div>
+      <div class="card-b" id="dev-box">
+        <div id="dev-empty" class="empty">
+          <svg viewBox="0 0 24 24"><path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01M4.93 12.93a10 10 0 0114.14 0"/></svg>
+          Esperando conexion...
+        </div>
+        <div id="dev-info" style="display:none">
+          <div class="info-grid">
+            <dt>IP</dt><dd id="dev-ip">-</dd>
+            <dt>MAC</dt><dd id="dev-mac">-</dd>
+            <dt>Host</dt><dd id="dev-host">-</dd>
+            <dt>Estado</dt><dd id="dev-status">-</dd>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-h">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg>
+        <h2>Actividad</h2>
+        <button class="btn" onclick="clearLog()" style="margin-left:auto;font-size:10px;padding:2px 7px">Limpiar</button>
+      </div>
+      <div class="card-b">
+        <div class="log-wrap" id="log-wrap"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var _tOff = 0;
+var DEFAULT_SSID = 'Home-migracion';
+var DEFAULT_PASS = 'homeupdate';
+
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function api(url, opts) {
+  return fetch(url, opts || {}).then(function(r) { return r.json(); }).catch(function() { return null; });
+}
+
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 3000);
+}
+
+function setPhase(n) {
+  document.querySelectorAll('.tl-step').forEach(function(el) {
+    var s = parseInt(el.dataset.s);
+    el.classList.remove('done', 'active');
+    if (s < n) el.classList.add('done');
+    else if (s === n) el.classList.add('active');
+  });
+}
+
+function renderSvc(list) {
+  var g = document.getElementById('svc-grid');
+  var up = 0;
+  g.innerHTML = list.map(function(s) {
+    if (s.active) up++;
+    return '<div class="svc"><div class="svc-top"><span class="dot ' + (s.active ? 'on' : 'off') + '"></span><span class="svc-name">' + esc(s.name) + '</span></div><span class="svc-port">:' + esc(s.port) + '</span></div>';
+  }).join('');
+  var tag = document.getElementById('svc-tag');
+  tag.textContent = up + '/' + list.length;
+  if (up === list.length) {
+    tag.style.background = 'var(--green-bg)';
+    tag.style.color = 'var(--green)';
+    tag.style.borderColor = 'rgba(109,191,90,.2)';
+  } else if (up > 0) {
+    tag.style.background = 'var(--accent-glow)';
+    tag.style.color = 'var(--accent)';
+    tag.style.borderColor = 'rgba(224,168,90,.2)';
+  } else {
+    tag.style.background = 'var(--red-bg)';
+    tag.style.color = 'var(--red)';
+    tag.style.borderColor = 'rgba(212,90,90,.2)';
+  }
+}
+
+var _logLines = [];
+function addLog(lines) {
+  var wrap = document.getElementById('log-wrap');
+  lines.forEach(function(l) {
+    if (_logLines.indexOf(l) !== -1) return;
+    _logLines.push(l);
+    var div = document.createElement('div');
+    div.className = 'log-line';
+    var txt = esc(l);
+    txt = txt.replace(/^(\d{2}:\d{2}:\d{2})/, '<span class="ts">$1</span>');
+    if (/error|fail|fallo/i.test(l)) txt = '<span class="err">' + txt + '</span>';
+    else if (/ok|success|activ|conect/i.test(l)) txt = '<span class="ok">' + txt + '</span>';
+    else if (/warn|aviso|espera/i.test(l)) txt = '<span class="warn">' + txt + '</span>';
+    div.innerHTML = txt;
+    wrap.appendChild(div);
+  });
+  if (_logLines.length > 200) {
+    _logLines = _logLines.slice(-150);
+    while (wrap.children.length > 150) wrap.removeChild(wrap.firstChild);
+  }
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function clearLog() {
+  _logLines = [];
+  document.getElementById('log-wrap').innerHTML = '';
+}
+
+function updateOtaCycles(phase) {
+  var c1 = document.getElementById('ota-c1');
+  var c2 = document.getElementById('ota-c2');
+  c1.classList.remove('active', 'done');
+  c2.classList.remove('active', 'done');
+  if (phase === 'pivot') {
+    c1.classList.add('active');
+  } else if (phase === 'home') {
+    c1.classList.add('done');
+    c2.classList.add('active');
+  } else if (phase === 'done') {
+    c1.classList.add('done');
+    c2.classList.add('done');
+  }
+}
+
+function poll() {
+  api('/api/status').then(function(r) {
+    if (!r) return;
+
+    if (r.ntp_time) _tOff = Math.floor(Date.now() / 1000) - r.ntp_time;
+    var now = new Date(Date.now() + _tOff * 1000);
+    document.getElementById('h-time').textContent = now.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+    if (r.services) renderSvc(r.services);
+
+    var hd = document.getElementById('h-dot');
+    var hs = document.getElementById('h-status');
+    if (r.device && r.device.ok) {
+      hd.className = 'hdr-dot on';
+      hs.textContent = 'Conectado';
+    } else {
+      hd.className = 'hdr-dot off';
+      hs.textContent = 'Sin dispositivo';
+    }
+
+    if (r.device && r.device.ok) {
+      document.getElementById('dev-empty').style.display = 'none';
+      document.getElementById('dev-info').style.display = 'block';
+      document.getElementById('dev-ip').textContent = r.device.ip || '-';
+      document.getElementById('dev-mac').textContent = r.device.mac || '-';
+      document.getElementById('dev-host').textContent = r.device.host || '-';
+      document.getElementById('dev-status').innerHTML = '<span style="color:var(--green)">Conectado</span>';
+    } else {
+      document.getElementById('dev-empty').style.display = 'block';
+      document.getElementById('dev-info').style.display = 'none';
+    }
+
+    if (r.wifi) {
+      var ss = document.getElementById('w-ssid'), wp = document.getElementById('w-pass');
+      if (document.activeElement !== ss) ss.value = r.wifi.ssid || DEFAULT_SSID;
+      if (document.activeElement !== wp) wp.value = r.wifi.pass || DEFAULT_PASS;
+    }
+
+    var phase = 0;
+    var otaCycle = '-';
+    if (r.ota) {
+      var o = r.ota;
+      document.getElementById('ota-file').textContent = o.file || '-';
+      var bar = document.getElementById('ota-bar');
+
+      if (o.phase === 'done') {
+        document.getElementById('ota-state').innerHTML = '<span style="color:var(--green)">Completado</span>';
+        bar.style.width = '100%';
+        bar.classList.remove('active');
+        document.getElementById('ota-tag').textContent = 'Completado';
+        otaCycle = 'Finalizado';
+        updateOtaCycles('done');
+        phase = 3;
+      } else if (o.phase === 'installing') {
+        document.getElementById('ota-state').innerHTML = '<span style="color:var(--accent)">Instalando...</span>';
+        bar.style.width = '85%';
+        bar.classList.add('active');
+        document.getElementById('ota-tag').textContent = 'Instalando';
+        otaCycle = 'Home ROM';
+        updateOtaCycles('home');
+        phase = 2;
+      } else if (o.downloading) {
+        var pct = o.pct || 0;
+        document.getElementById('ota-state').innerHTML = '<span style="color:var(--accent)">Descargando...</span>';
+        document.getElementById('ota-dl').textContent = pct + '%';
+        bar.style.width = pct + '%';
+        bar.classList.add('active');
+        document.getElementById('ota-tag').textContent = pct + '%';
+        otaCycle = 'OTA Pivot';
+        updateOtaCycles('pivot');
+        phase = 1;
+      } else if (o.ready) {
+        document.getElementById('ota-state').textContent = 'Listo para servir';
+        bar.classList.remove('active');
+        document.getElementById('ota-tag').textContent = 'Listo';
+        otaCycle = 'Esperando';
+        updateOtaCycles(null);
+        phase = r.device && r.device.ok ? 1 : 0;
+      } else {
+        document.getElementById('ota-state').textContent = 'Sin archivos OTA';
+        bar.classList.remove('active');
+        document.getElementById('ota-tag').textContent = '-';
+        otaCycle = '-';
+        updateOtaCycles(null);
+      }
+    }
+    document.getElementById('ota-cycle').textContent = otaCycle;
+    if (r.device && r.device.ok && phase < 1) phase = 1;
+    setPhase(phase);
+  });
+
+  api('/api/log').then(function(r) {
+    if (r && r.lines) addLog(r.lines);
+  });
+}
+
+function saveWifi() {
+  var ssid = document.getElementById('w-ssid').value.trim();
+  var pass = document.getElementById('w-pass').value.trim();
+  if (!ssid) { toast('SSID no puede estar vacio'); return; }
+  if (pass.length < 8) { toast('Contrasena minimo 8 caracteres'); return; }
+  api('/api/wifi', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ssid: ssid, pass: pass})
+  }).then(function(r) {
+    if (r && r.ok) toast('WiFi guardado, reiniciando AP...');
+    else toast('Error: ' + (r ? r.error : 'sin respuesta'));
+  });
+}
+
+function restartWifi() {
+  api('/api/action', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'restart_wifi'})
+  }).then(function(r) {
+    toast(r && r.ok ? 'WiFi reiniciado' : 'Error reiniciando WiFi');
+  });
+}
+
+function restartAll() {
+  api('/api/action', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'restart_all'})
+  }).then(function(r) {
+    toast(r && r.ok ? 'Servicios reiniciados' : 'Error');
+  });
+}
+
+setInterval(poll, 3000);
+poll();
+</script>
+</body></html>

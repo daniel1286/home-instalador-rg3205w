@@ -1,0 +1,16 @@
+[Unit]
+Description=Home backend Captive Portal check (:80)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/mh-fake/captive_server.py --bind 0.0.0.0:80
+Restart=on-failure
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

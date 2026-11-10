@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 620" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141210"/>
+      <stop offset="100%" stop-color="#0C0B09"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="760" height="620" rx="12" fill="url(#bg2)"/>
+
+  <!-- Titulo -->
+  <text x="380" y="36" text-anchor="middle" fill="#E0A85A" font-size="15" font-weight="600">Proceso de migracion inalambrica</text>
+
+  <!-- Columnas -->
+  <text x="190" y="62" text-anchor="middle" fill="#A08870" font-size="11" font-weight="600">TU</text>
+  <text x="570" y="62" text-anchor="middle" fill="#A08870" font-size="11" font-weight="600">AUTOMATICO</text>
+  <line x1="380" y1="50" x2="380" y2="600" stroke="#2A2520" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- Paso 1 -->
+  <rect x="40" y="78" width="300" height="50" rx="8" fill="#1A1814" stroke="#E0A85A" stroke-width="1.5"/>
+  <circle cx="62" cy="103" r="12" fill="#E0A85A"/>
+  <text x="62" y="107" text-anchor="middle" fill="#0C0B09" font-size="11" font-weight="700">1</text>
+  <text x="84" y="97" fill="#F0E8D8" font-size="12" font-weight="600">Montar la Pi</text>
+  <text x="84" y="114" fill="#A08870" font-size="10">git clone + sudo bash instalar.sh + reboot</text>
+
+  <!-- Flecha 1-2 -->
+  <line x1="190" y1="128" x2="190" y2="146" stroke="#5A4A30" stroke-width="1"/>
+  <polygon points="185,143 190,153 195,143" fill="#5A4A30"/>
+
+  <!-- Paso 2 -->
+  <rect x="40" y="155" width="300" height="50" rx="8" fill="#1A1814" stroke="#E0A85A" stroke-width="1.5"/>
+  <circle cx="62" cy="180" r="12" fill="#E0A85A"/>
+  <text x="62" y="184" text-anchor="middle" fill="#0C0B09" font-size="11" font-weight="700">2</text>
+  <text x="84" y="174" fill="#F0E8D8" font-size="12" font-weight="600">Factory reset</text>
+  <text x="84" y="191" fill="#A08870" font-size="10">Settings - Backup and Reset - Factory Data Reset</text>
+
+  <!-- Flecha 2-3 -->
+  <line x1="190" y1="205" x2="190" y2="223" stroke="#5A4A30" stroke-width="1"/>
+  <polygon points="185,220 190,230 195,220" fill="#5A4A30"/>
+
+  <!-- Paso 3 -->
+  <rect x="40" y="232" width="300" height="50" rx="8" fill="#1A1814" stroke="#E0A85A" stroke-width="1.5"/>
+  <circle cx="62" cy="257" r="12" fill="#E0A85A"/>
+  <text x="62" y="261" text-anchor="middle" fill="#0C0B09" font-size="11" font-weight="700">3</text>
+  <text x="84" y="251" fill="#F0E8D8" font-size="12" font-weight="600">Conectar WiFi</text>
+  <text x="84" y="268" fill="#A08870" font-size="10">Home-migracion / homeupdate</text>
+
+  <!-- Flecha cruzando -->
+  <line x1="340" y1="282" x2="420" y2="308" stroke="#E0A85A" stroke-width="1.5"/>
+  <polygon points="415,302 425,311 418,314" fill="#E0A85A"/>
+  <text x="380" y="290" text-anchor="middle" fill="#706050" font-size="9">automatico</text>
+
+  <!-- Paso 4 -->
+  <rect x="420" y="310" width="300" height="44" rx="8" fill="#1A1814" stroke="#C89240" stroke-width="1"/>
+  <circle cx="442" cy="332" r="12" fill="#C89240"/>
+  <text x="442" y="336" text-anchor="middle" fill="#0C0B09" font-size="11" font-weight="700">4</text>
+  <text x="464" y="327" fill="#F0E8D8" font-size="11" font-weight="600">DNS + portal cautivo</text>
+  <text x="464" y="342" fill="#A08870" font-size="9">DNS resuelve a la Pi, captive portal OK</text>
+
+  <!-- Flecha 4-5 -->
+  <line x1="570" y1="354" x2="570" y2="370" stroke="#5A4A30" stroke-width="1"/>
+  <polygon points="565,367 570,377 575,367" fill="#5A4A30"/>
+
+  <!-- Paso 5 -->
+  <rect x="420" y="378" width="300" height="44" rx="8" fill="#1A1814" stroke="#C89240" stroke-width="1"/>
+  <circle cx="442" cy="400" r="12" fill="#C89240"/>
+  <text x="442" y="404" text-anchor="middle" fill="#0C0B09" font-size="11" font-weight="700">5</text>
+  <text x="464" y="395" fill="#F0E8D8" font-size="11" font-weight="600">Onboarding (APIs)</text>
+  <text x="464" y="410" fill="#A08870" font-size="9">JWT, config, terminos: el asistente pasa solo</text>
+
+  <!-- Flecha 5-6 -->
+  <line x1="570" y1="422" x2="570" y2="438" stroke="#5A4A30" stroke-width="1"/>
+  <polygon points="565,435 570,445 575,435" fill="#5A4A30"/>
+
+  <!-- Paso 6 -->
+  <rect x="420" y="446" width="300" height="50" rx="8" fill="#1A1814" stroke="#E0A85A" stroke-width="1.5"/>
+  <circle cx="442" cy="471" r="12" fill="#E0A85A"/>
+  <text x="442" y="475" text-anchor="middle" fill="#0C0B09" font-size="11" font-weight="700">6</text>
+  <text x="464" y="464" fill="#F0E8D8" font-size="11" font-weight="600">Descarga OTA pivot</text>
+  <text x="464" y="480" fill="#A08870" font-size="9">pivot_ota_rg3205w_home.zip (~1.1 MB)</text>
+  <text x="464" y="492" fill="#706050" font-size="8">REST /v1/updates/fw o TR-069</text>
+
+  <!-- Flecha 6-7 -->
+  <line x1="570" y1="496" x2="570" y2="512" stroke="#5A4A30" stroke-width="1"/>
+  <polygon points="565,509 570,519 575,509" fill="#5A4A30"/>
+
+  <!-- Paso 7 -->
+  <rect x="420" y="520" width="300" height="44" rx="8" fill="#1A1814" stroke="#C89240" stroke-width="1"/>
+  <circle cx="442" cy="542" r="12" fill="#C89240"/>
+  <text x="442" y="546" text-anchor="middle" fill="#0C0B09" font-size="11" font-weight="700">7</text>
+  <text x="464" y="537" fill="#F0E8D8" font-size="11" font-weight="600">Reinicio a recovery</text>
+  <text x="464" y="552" fill="#A08870" font-size="9">El pivot instala Home automaticamente</text>
+
+  <!-- Flecha 7-8 -->
+  <line x1="570" y1="564" x2="570" y2="578" stroke="#5A4A30" stroke-width="1"/>
+  <polygon points="565,575 570,585 575,575" fill="#5A4A30"/>
+
+  <!-- Paso 8: Hecho -->
+  <rect x="420" y="586" width="300" height="28" rx="8" fill="#1E3A1E" stroke="#5A9A5A" stroke-width="1.5"/>
+  <text x="570" y="605" text-anchor="middle" fill="#5A9A5A" font-size="12" font-weight="600">Home instalado</text>
+</svg>

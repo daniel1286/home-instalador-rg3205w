@@ -1,0 +1,9 @@
+# Finales de línea fijos: los de Windows con CRLF y el resto con LF
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.manifest text eol=crlf
+*.png binary
+*.ico binary
+*.ttf binary

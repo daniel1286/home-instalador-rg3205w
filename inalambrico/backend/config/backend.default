@@ -1,0 +1,28 @@
+# /etc/default/mh-fake — configuracion del backend local.
+# Lo lee cada servicio al arrancar. Cambia MH_MODE y reinicia:
+#     sudo mh-mode onboarding      (o: sudo mh-mode ota)
+#
+# ---------------------------------------------------------------------------
+# MH_MODE:
+#   onboarding = SOLO completar el asistente. /v1/updates/fw responde
+#                hasUpdate:false, así el paso Update pasa limpio y NO se
+#                ofrece ninguna OTA. Es el modo para la primera fase.
+#   ota        = tras el onboarding. /v1/updates/fw ofrece el pivot, y el
+#                ACS (TR-069) encola el Download del pivot y luego la ROM.
+MH_MODE=ota
+
+# IP del backend en la red del AP (no tocar salvo que cambies la subred).
+MH_IP=10.42.0.1
+
+# Rutas de los OTA (solo se usan en modo ota). Los tamaños MH_*_SIZE son solo
+# un fallback: los lanzadores miden el tamaño REAL del fichero en
+# /opt/mh-fake/otas al arrancar, así que al re-subir un OTA no hay que tocar
+# estos valores a mano.
+MH_PIVOT_URL=http://10.42.0.1:8000/pivot_ota_rg3205w_home.zip
+MH_PIVOT_SIZE=31880617
+MH_HOME_URL=http://10.42.0.1:8000/Home-ota-rg3205w.zip
+MH_HOME_SIZE=1108418366
+
+# Credenciales Basic que el aparato manda al ACS. Vacío = aceptar cualquiera
+# (recomendado: un CPE ya aprovisionado manda las suyas y no las conocemos).
+MH_ACS_AUTH=

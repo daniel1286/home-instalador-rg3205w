@@ -1,0 +1,17 @@
+[Unit]
+Description=Home backend ACS (CWMP TR-069, HTTPS :7016)
+After=network-online.target hostapd.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/default/mh-fake
+ExecStart=/opt/mh-fake/run-cwmp.sh
+Restart=on-failure
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

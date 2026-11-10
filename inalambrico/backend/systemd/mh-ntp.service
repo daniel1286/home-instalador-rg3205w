@@ -1,0 +1,17 @@
+[Unit]
+Description=Home backend NTP server (:123/udp)
+After=network-online.target
+Wants=network-online.target
+Conflicts=systemd-timesyncd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/mh-fake/ntp_server.py --date 2025-07-01
+Restart=on-failure
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
