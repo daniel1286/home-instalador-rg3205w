@@ -1,0 +1,50 @@
+name: Compilar
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compilar:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compilar
+        shell: cmd
+        run: compilar.cmd
+
+      - name: SHA256
+        shell: pwsh
+        run: |
+          $h = (Get-FileHash salida\Instalar-Home.exe -Algorithm SHA256).Hash.ToLower()
+          "$h  Instalar-Home.exe" | Out-File -Encoding ascii salida\Instalar-Home.exe.sha256
+          Get-Content salida\Instalar-Home.exe.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Instalar-Home
+          path: salida/
+
+      # Con una etiqueta vX.Y se publica la release con el .exe y su SHA256. Si la release ya existe (la etiqueta se ha
+      # movido a un commit nuevo), solo se cambian el .exe y su SHA256: notas, «previa» y demás archivos se quedan igual
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ETIQUETA: ${{ github.ref_name }}
+        run: |
+          gh release view $env:ETIQUETA --json tagName *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:ETIQUETA salida/Instalar-Home.exe salida/Instalar-Home.exe.sha256 --clobber
+          } else {
+            gh release create $env:ETIQUETA salida/Instalar-Home.exe salida/Instalar-Home.exe.sha256 `
+              --title "Instalar Home $env:ETIQUETA" --generate-notes
+          }

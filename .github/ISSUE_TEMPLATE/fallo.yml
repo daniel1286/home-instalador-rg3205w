@@ -1,0 +1,68 @@
+name: Fallo del instalador / Installer bug
+description: Instalar Home no hace lo que debería. / Instalar Home doesn't work as it should.
+title: "[Fallo] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Si el fallo es de Home y no del instalador, ábrelo en [home-rom-rg3205w](https://github.com/daniel1286/home-rom-rg3205w/issues/new/choose).
+
+        If the bug is in Home and not in the installer, please open it in [home-rom-rg3205w](https://github.com/daniel1286/home-rom-rg3205w/issues/new/choose).
+
+  - type: input
+    id: version
+    attributes:
+      label: Versión del instalador / Installer version
+      description: La de la release que descargaste, por ejemplo v1.0 / The release you downloaded, for example v1.0
+      placeholder: v1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows
+      options:
+        - Windows 11
+        - Windows 10
+    validations:
+      required: true
+
+  - type: dropdown
+    id: paso
+    attributes:
+      label: Paso / Step
+      options:
+        - Descargar / Download
+        - Driver USB / USB driver
+        - Conectar / Connect
+        - Desbloquear / Unlock
+        - Instalar / Install
+        - Al abrirlo / On startup
+        - Otro / Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: revision
+    attributes:
+      label: Revisión del aparato / Device revision
+      options:
+        - Rev4 (USB-C)
+        - Rev5 (J4902)
+        - No lo sé / Not sure
+
+  - type: textarea
+    id: que_pasa
+    attributes:
+      label: Qué pasa / What happens
+      description: Qué mensaje sale. Las capturas ayudan. / What message shows up. Screenshots help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: registro
+    attributes:
+      label: Registro / Log
+      description: Opciones → Registros. Arrastra aquí el archivo o pega su contenido. / Opciones → Registros. Drag the file here or paste its contents.

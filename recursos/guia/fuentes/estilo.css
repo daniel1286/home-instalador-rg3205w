@@ -1,0 +1,27 @@
+/* SPDX-FileCopyrightText: 2026 The Home Project */
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Estilo de las imágenes de la guía: el del instalador (grafito, ámbar e Inter). Miden 520 px de ancho, lo que mide
+   la columna de la guía en la ventana del instalador, para que la letra se lea a su tamaño real */
+@font-face { font-family: Inter; font-weight: 400; src: url(../../letras/inter_400.ttf); }
+@font-face { font-family: Inter; font-weight: 500; src: url(../../letras/inter_500.ttf); }
+@font-face { font-family: Inter; font-weight: 600; src: url(../../letras/inter_600.ttf); }
+@font-face { font-family: Inter; font-weight: 700; src: url(../../letras/inter_700.ttf); }
+
+:root {
+  --fondo: #1b1a18; --tarjeta: #242220; --borde: #3a3733; --texto: #f2efe9; --texto2: #a8a29a; --texto3: #7d776f;
+  --ambar: #e0a85a; --ambar-oscuro: #2b1c06; --ventana: #f3f3f3; --ventana-texto: #1f1f1f;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 520px; background: var(--fondo); color: var(--texto); font-family: Inter, sans-serif; }
+body { padding: 12px 0 14px; }
+.fila { display: grid; gap: 10px; }
+.dos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.tarjeta { position: relative; background: var(--tarjeta); border: 1.5px solid var(--borde); border-radius: 14px; padding: 12px 10px 12px; text-align: center; }
+.tarjeta.clave { border-color: var(--ambar); box-shadow: 0 0 0 3px rgba(224, 168, 90, .14); }
+.num { position: absolute; top: 9px; left: 9px; width: 26px; height: 26px; border-radius: 50%; background: var(--ambar); color: var(--ambar-oscuro);
+  font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.tarjeta svg { display: block; width: 100%; height: auto; margin: 6px auto 4px; }
+.tit { font-size: 15px; font-weight: 700; line-height: 1.25; }
+.det { margin-top: 3px; font-size: 13px; color: var(--texto2); line-height: 1.35; }
+.det b, .tit b { color: var(--ambar); font-weight: 700; }
+.pie { margin-top: 8px; text-align: center; color: var(--texto3); font-size: 12px; }

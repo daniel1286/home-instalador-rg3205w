@@ -1,0 +1,17 @@
+[Unit]
+Description=Home backend SNI TLS API (:443)
+After=network-online.target hostapd.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/default/mh-fake
+ExecStart=/opt/mh-fake/run-sni.sh
+Restart=on-failure
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

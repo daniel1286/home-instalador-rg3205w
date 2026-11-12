@@ -1,0 +1,5 @@
+salida/
+inalambrico/backend/certs/
+*.zip
+__pycache__/
+*.pyc

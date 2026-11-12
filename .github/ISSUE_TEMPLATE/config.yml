@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Dudas sobre Home / Questions about Home
+    url: https://github.com/daniel1286/home-rom-rg3205w/discussions
+    about: Instalación, uso y preguntas frecuentes. / Installing, using and FAQ.
+  - name: Fallos de Home / Home bugs
+    url: https://github.com/daniel1286/home-rom-rg3205w/issues/new/choose
+    about: Si el fallo es del sistema y no del instalador. / If the bug is in the system and not in the installer.

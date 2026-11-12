@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 The Home Project · SPDX-License-Identifier: Apache-2.0 -->
+<!-- Fuente de recursos/guia/recovery_2.png (hacer.ps1): la segunda combinación, pasos 5 y 6 -->
+<html lang="es"><head><meta charset="utf-8"><title>recovery_2</title>
+<link rel="stylesheet" href="estilo.css"><script src="aparato.js"></script></head>
+<body>
+  <div class="fila dos" id="pasos"></div>
+<script>
+  document.getElementById('pasos').innerHTML = [
+    tarjeta({ num: 5, tit: 'Encendido y Vol +', det: 'Mantén Encendido y pulsa <b>Vol + una vez</b>',
+      dibujo: aparato({ pantalla: 'negra', vol: 'una', enc: 'pulsado' }) }),
+    tarjeta({ num: 6, tit: 'Sale el menú', det: 'Ya puedes soltar Encendido',
+      dibujo: aparato({ pantalla: 'menu' }) }),
+  ].join('');
+</script>
+</body></html>

@@ -1,0 +1,17 @@
+[Unit]
+Description=Home backend OTA HTTP file server (:8000)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/mh-fake/ota_server.py \
+    --bind 0.0.0.0:8000 --root /opt/mh-fake/otas
+Restart=on-failure
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 The Home Project · SPDX-License-Identifier: Apache-2.0 -->
+<!-- Fuente de recursos/guia/recovery_1.png (hacer.ps1): la primera combinación, pasos 1 a 4 -->
+<html lang="es"><head><meta charset="utf-8"><title>recovery_1</title>
+<link rel="stylesheet" href="estilo.css"><script src="aparato.js"></script></head>
+<body>
+  <div class="fila dos" id="pasos"></div>
+<script>
+  document.getElementById('pasos').innerHTML = [
+    tarjeta({ num: 1, tit: 'Apágalo', det: 'Si no puedes desde la pantalla, desenchúfalo',
+      dibujo: aparato({ pantalla: 'apagada' }) }),
+    tarjeta({ num: 2, tit: 'Mantén los tres', det: 'Si lo desenchufaste, enchúfalo ahora <b>sin soltar</b>',
+      dibujo: aparato({ pantalla: 'apagada', vol: 'pulsado', enc: 'pulsado' }) }),
+    tarjeta({ num: 3, tit: 'Pantalla azul', det: 'Con el logo blanco: <b>no sueltes todavía</b>',
+      dibujo: aparato({ pantalla: 'azul', vol: 'pulsado', enc: 'pulsado' }) }),
+    tarjeta({ num: 4, tit: 'Se queda en negro', det: 'Con un poco de luz: <b>suelta los tres ya</b>', clave: true,
+      dibujo: aparato({ pantalla: 'negra' }) }),
+  ].join('');
+</script>
+</body></html>

@@ -1,0 +1,12 @@
+[Unit]
+Description=Panel web de control Home (:8080)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/mh-fake/panel_server.py --bind 0.0.0.0:8080
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

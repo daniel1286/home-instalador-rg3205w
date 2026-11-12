@@ -1,0 +1,271 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Instalar Home" Width="1100" Height="700" ResizeMode="CanMinimize"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource Fondo}" FontSize="14"
+        FontFamily="{DynamicResource Letra}" Foreground="{DynamicResource Texto}">
+  <Window.Resources>
+    <Style TargetType="ScrollBar">
+      <Setter Property="Width" Value="6"/>
+      <Setter Property="MinWidth" Value="6"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ScrollBar">
+            <Track x:Name="PART_Track" IsDirectionReversed="True">
+              <Track.Thumb>
+                <Thumb>
+                  <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb"><Border CornerRadius="3" Background="{DynamicResource Borde}"/></ControlTemplate>
+                  </Thumb.Template>
+                </Thumb>
+              </Track.Thumb>
+            </Track>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="Principal" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextoBoton}"/>
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="MinWidth" Value="260"/>
+      <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Grid>
+              <Border x:Name="sombra" CornerRadius="26" Background="{DynamicResource Acento}" Opacity="0.35" Margin="6,8,6,-2">
+                <Border.Effect><BlurEffect Radius="18"/></Border.Effect>
+              </Border>
+              <Border x:Name="b" CornerRadius="26" Background="{DynamicResource Acento}" Height="52" Padding="34,0">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="b" Property="Background" Value="{DynamicResource AcentoHover}"/>
+                <Setter TargetName="sombra" Property="Opacity" Value="0.6"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter Property="RenderTransform"><Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97"/></Setter.Value></Setter>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="b" Property="Background" Value="{DynamicResource Apagado}"/>
+                <Setter TargetName="sombra" Property="Visibility" Value="Collapsed"/>
+                <Setter Property="Foreground" Value="{DynamicResource Texto2}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="Enlace" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Foreground" Value="{DynamicResource Acento}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border Background="Transparent" Padding="2,4">
+              <ContentPresenter x:Name="c"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{DynamicResource AcentoHover}"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="Indice" TargetType="RadioButton">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Foreground" Value="{DynamicResource Texto2}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Margin" Value="0,0,0,2"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="b" CornerRadius="9" Background="Transparent" Padding="10,7">
+              <ContentPresenter/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{DynamicResource Texto}"/></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="b" Property="Background" Value="{DynamicResource AcentoSuave}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Acento}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="Casilla" TargetType="CheckBox">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Foreground" Value="{DynamicResource Texto}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="CheckBox">
+            <StackPanel Orientation="Horizontal" Background="Transparent">
+              <Border x:Name="caja" Width="18" Height="18" CornerRadius="5" BorderThickness="1.5" BorderBrush="{DynamicResource Borde}"
+                      Background="Transparent" VerticalAlignment="Center">
+                <Path x:Name="marca" Data="M3.5,8 L6.5,11 L11.5,4.5" Stroke="{DynamicResource TextoBoton}" StrokeThickness="2.2"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Visibility="Collapsed"/>
+              </Border>
+              <ContentPresenter Margin="9,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="caja" Property="BorderBrush" Value="{DynamicResource Acento}"/></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="caja" Property="Background" Value="{DynamicResource Acento}"/>
+                <Setter TargetName="caja" Property="BorderBrush" Value="{DynamicResource Acento}"/>
+                <Setter TargetName="marca" Property="Visibility" Value="Visible"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="290"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <!-- Izquierda: versión y los cuatro pasos -->
+    <Border Background="{DynamicResource Riel}" BorderBrush="{DynamicResource Borde}" BorderThickness="0,0,1,0" Padding="30,30,26,24">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+          <TextBlock Text="Home" FontSize="30" FontWeight="Bold"/>
+          <TextBlock Text="para el Askey RG3205W" FontSize="13" Foreground="{DynamicResource Texto2}"/>
+          <Border Margin="0,26,0,0" Padding="16,12" CornerRadius="14" Background="{DynamicResource Tarjeta}">
+            <StackPanel>
+              <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                  <Ellipse x:Name="PuntoGitHub" Width="7" Height="7" Margin="0,0,6,0" Fill="{DynamicResource Texto2}"/>
+                  <TextBlock x:Name="EstadoGitHub" FontSize="11" Foreground="{DynamicResource Texto2}"/>
+                </StackPanel>
+                <TextBlock Text="VERSIÓN" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Texto2}"/>
+              </DockPanel>
+              <TextBlock x:Name="VersionNumero" FontSize="38" FontWeight="Bold" Foreground="{DynamicResource Acento}" Margin="0,0,0,-2"/>
+              <TextBlock x:Name="VersionDatos" FontSize="12" Foreground="{DynamicResource Texto2}" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom">
+          <!-- Contar esta instalación: a la vista desde el principio y se puede desmarcar antes de empezar -->
+          <Border Margin="0,0,0,16" Padding="14,11" CornerRadius="12" Background="{DynamicResource Tarjeta}">
+            <StackPanel>
+              <CheckBox x:Name="CasillaEstadistica" Style="{StaticResource Casilla}" Content="Contar esta instalación"/>
+              <TextBlock Text="Anónimo: la descarga y si sale bien o en qué paso falla." FontSize="11" Foreground="{DynamicResource Texto2}"
+                         TextWrapping="Wrap" Margin="27,3,0,0"/>
+              <Button x:Name="BotonQueSeEnvia" Style="{StaticResource Enlace}" HorizontalAlignment="Left" Content="Qué se envía"
+                      FontSize="12" Margin="25,1,0,0"/>
+            </StackPanel>
+          </Border>
+          <Button x:Name="BotonGuia" Style="{StaticResource Enlace}" HorizontalAlignment="Left" Content="Guía de instalación"/>
+          <Button x:Name="BotonMas" Style="{StaticResource Enlace}" HorizontalAlignment="Left" Content="Opciones" Margin="0,4,0,0"/>
+        </StackPanel>
+        <StackPanel x:Name="Riel" Margin="0,30,0,0"/>
+      </DockPanel>
+    </Border>
+
+    <!-- Derecha: la pantalla del paso -->
+    <Grid Grid.Column="1" ClipToBounds="True">
+      <Ellipse Width="620" Height="420" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,-170,0,0"
+               Fill="{DynamicResource Acento}" Opacity="0.07" IsHitTestVisible="False">
+        <Ellipse.Effect><BlurEffect Radius="140"/></Ellipse.Effect>
+      </Ellipse>
+
+      <Grid x:Name="Pantalla" Margin="56,36,56,30">
+        <Grid.RenderTransform><TranslateTransform x:Name="PantallaDesliz"/></Grid.RenderTransform>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="Heroe" Width="196" Height="196" HorizontalAlignment="Center" Margin="0,0,0,22">
+          <Ellipse x:Name="Pulso" Stroke="{DynamicResource Acento}" StrokeThickness="2" RenderTransformOrigin="0.5,0.5" Opacity="0">
+            <Ellipse.RenderTransform><ScaleTransform x:Name="PulsoEscala"/></Ellipse.RenderTransform>
+          </Ellipse>
+          <Ellipse x:Name="Pulso2" Stroke="{DynamicResource Acento}" StrokeThickness="1.5" RenderTransformOrigin="0.5,0.5" Opacity="0">
+            <Ellipse.RenderTransform><ScaleTransform x:Name="PulsoEscala2"/></Ellipse.RenderTransform>
+          </Ellipse>
+          <Ellipse Margin="10" Stroke="{DynamicResource Borde}" StrokeThickness="6" Fill="{DynamicResource Tarjeta}"/>
+          <Path x:Name="Arco" Stroke="{DynamicResource Acento}" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+            <Path.RenderTransform><RotateTransform x:Name="ArcoGiro"/></Path.RenderTransform>
+          </Path>
+          <Viewbox x:Name="CajaIcono" Width="74" Height="74">
+            <Canvas Width="48" Height="48">
+              <Path x:Name="Icono" Stroke="{DynamicResource Acento}" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" StrokeDashArray="60 60"/>
+            </Canvas>
+          </Viewbox>
+          <TextBlock x:Name="HeroeCifra" FontSize="44" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+        </Grid>
+
+        <TextBlock x:Name="Titulo" Grid.Row="1" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+        <TextBlock x:Name="Texto" Grid.Row="2" FontSize="15" Foreground="{DynamicResource Texto2}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="560" Margin="0,8,0,0" LineHeight="22"/>
+
+        <Grid Grid.Row="3" Margin="0,18,0,0">
+          <StackPanel x:Name="Contenido" HorizontalAlignment="Center" MaxWidth="580"/>
+          <Border x:Name="CajaDetalles" Background="{DynamicResource Tarjeta}" CornerRadius="12" Padding="14,10" Visibility="Collapsed">
+            <TextBox x:Name="TextoRegistro" IsReadOnly="True" FontFamily="Consolas" FontSize="11" Background="Transparent" Foreground="{DynamicResource Texto2}"
+                     BorderThickness="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden" TextWrapping="NoWrap"/>
+          </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="4" HorizontalAlignment="Center">
+          <Button x:Name="BotonPrincipal" Style="{StaticResource Principal}" HorizontalAlignment="Center"/>
+          <Button x:Name="BotonSecundario" Style="{StaticResource Enlace}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- Guía, encima de la pantalla del paso -->
+      <Grid x:Name="CapaGuia" Background="{DynamicResource Fondo}" Visibility="Collapsed">
+        <DockPanel Margin="28,24,24,20">
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+            <Button x:Name="BotonCerrarGuia" DockPanel.Dock="Left" Style="{StaticResource Enlace}" Content="←  Volver" VerticalAlignment="Center" Margin="0,0,22,0"/>
+            <Button x:Name="BotonGuiaWeb" DockPanel.Dock="Right" Style="{StaticResource Enlace}" Content="Guía completa en GitHub ↗" Foreground="{DynamicResource Texto2}" VerticalAlignment="Center"/>
+            <TextBlock Text="Guía de instalación" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+          </DockPanel>
+          <StackPanel x:Name="IndiceGuia" DockPanel.Dock="Left" Width="196"/>
+          <ScrollViewer x:Name="ScrollGuia" VerticalScrollBarVisibility="Auto" Margin="18,0,0,0">
+            <StackPanel x:Name="ContenidoGuia" Margin="0,0,18,10"/>
+          </ScrollViewer>
+        </DockPanel>
+      </Grid>
+      <!-- Opciones, encima de la pantalla del paso -->
+      <Grid x:Name="CapaOpciones" Background="{DynamicResource Fondo}" Visibility="Collapsed">
+        <DockPanel Margin="28,24,24,20">
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,18">
+            <Button x:Name="BotonCerrarOpciones" DockPanel.Dock="Left" Style="{StaticResource Enlace}" Content="←  Volver" VerticalAlignment="Center" Margin="0,0,22,0"/>
+            <TextBlock Text="Opciones" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+          </DockPanel>
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="ContenidoOpciones" MaxWidth="640" Margin="0,0,12,10"/>
+          </ScrollViewer>
+        </DockPanel>
+      </Grid>
+      <!-- Informe de un fallo, encima de la pantalla del paso -->
+      <Grid x:Name="CapaInforme" Background="{DynamicResource Fondo}" Visibility="Collapsed">
+        <DockPanel Margin="28,24,24,20">
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,18">
+            <Button x:Name="BotonCerrarInforme" DockPanel.Dock="Left" Style="{StaticResource Enlace}" Content="←  Volver" VerticalAlignment="Center" Margin="0,0,22,0"/>
+            <TextBlock Text="Informe del fallo" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+          </DockPanel>
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="ContenidoInforme" MaxWidth="640" Margin="0,0,12,10"/>
+          </ScrollViewer>
+        </DockPanel>
+      </Grid>
+    </Grid>
+  </Grid>
+</Window>
