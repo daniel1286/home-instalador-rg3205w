@@ -456,14 +456,19 @@ class Handler(BaseHTTPRequestHandler):
             if method == "GET":
                 if getattr(OPTS, "no_update", False):
                     return self.send_json({"hasUpdate": False, "url": ""})
-                pivot = getattr(OPTS, "pivot_file", "pivot_ota_rg3205w_home.zip")
+                pivot = getattr(OPTS, "pivot_file", "Home-ota-rg3205w.zip")
                 pivot_path = os.path.join("/opt/mh-fake/otas", pivot)
                 if not os.path.isfile(pivot_path):
-                    log.warning("OTA pivot no encontrado: %s — respondiendo sin update", pivot_path)
-                    return self.send_json({"hasUpdate": False, "url": ""})
+                    fallback = os.path.join("/opt/mh-fake/otas", "Home-ota-rg3205w.zip")
+                    if os.path.isfile(fallback):
+                        pivot = "Home-ota-rg3205w.zip"
+                        pivot_path = fallback
+                    else:
+                        log.warning("OTA no encontrada: %s — respondiendo sin update", pivot_path)
+                        return self.send_json({"hasUpdate": False, "url": ""})
                 pivot_size = os.path.getsize(pivot_path)
                 if pivot_size < 1000:
-                    log.warning("OTA pivot vacio o corrupto (%d bytes): %s", pivot_size, pivot_path)
+                    log.warning("OTA vacia o corrupta (%d bytes): %s", pivot_size, pivot_path)
                     return self.send_json({"hasUpdate": False, "url": ""})
                 return self.send_json({
                     "hasUpdate": True,
@@ -674,10 +679,10 @@ def main():
     p.add_argument("--certs", required=True, help="dir with *.crt and *.key")
     p.add_argument("--ota-root", default="http://10.42.0.1:8000",
                    help="HTTP root for OTA downloads")
-    p.add_argument("--pivot-file", default="pivot_ota_rg3205w_home.zip",
-                   help="nombre del archivo pivot en /opt/mh-fake/otas/")
-    p.add_argument("--pivot-size", type=int, default=33844257,
-                   help="tamano en bytes del pivot (fallback, se autodetecta)")
+    p.add_argument("--pivot-file", default="Home-ota-rg3205w.zip",
+                   help="nombre del archivo OTA en /opt/mh-fake/otas/")
+    p.add_argument("--pivot-size", type=int, default=1245071682,
+                   help="tamano en bytes de la OTA (fallback, se autodetecta)")
     p.add_argument("--no-update", action="store_true",
                    help="onboarding-only: /v1/updates/fw returns hasUpdate:false")
     p.add_argument("--video-dir", default="video",

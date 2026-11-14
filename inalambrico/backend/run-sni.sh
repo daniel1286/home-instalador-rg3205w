@@ -5,8 +5,8 @@ set -eu
 [ -f /etc/default/mh-fake ] && . /etc/default/mh-fake
 MH_MODE=${MH_MODE:-onboarding}
 MH_IP=${MH_IP:-10.42.0.1}
-MH_PIVOT_URL=${MH_PIVOT_URL:-http://10.42.0.1:8000/pivot_ota_rg3205w_home.zip}
-MH_PIVOT_SIZE=${MH_PIVOT_SIZE:-33844257}
+MH_PIVOT_URL=${MH_PIVOT_URL:-http://10.42.0.1:8000/Home-ota-rg3205w.zip}
+MH_PIVOT_SIZE=${MH_PIVOT_SIZE:-1245071682}
 PIVOT_FILE=$(basename "$MH_PIVOT_URL")
 
 EXTRA=""

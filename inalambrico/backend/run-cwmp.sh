@@ -3,14 +3,16 @@
 # El ACS siempre responde Inform; en modo ota ademas encola el Download.
 set -eu
 [ -f /etc/default/mh-fake ] && . /etc/default/mh-fake
-MH_PIVOT_URL=${MH_PIVOT_URL:-https://main.acs.telefonica.net:7016/ota/pivot_ota_rg3205w_home.zip}
-MH_PIVOT_SIZE=${MH_PIVOT_SIZE:-33845013}
+MH_PIVOT_URL=${MH_PIVOT_URL:-https://main.acs.telefonica.net:7016/ota/Home-ota-rg3205w.zip}
+MH_PIVOT_SIZE=${MH_PIVOT_SIZE:-1245071682}
 MH_HOME_URL=${MH_HOME_URL:-http://10.42.0.1:8000/Home-ota-rg3205w.zip}
-MH_HOME_SIZE=${MH_HOME_SIZE:-1108418366}
+MH_HOME_SIZE=${MH_HOME_SIZE:-1245071682}
 MH_ACS_AUTH=${MH_ACS_AUTH:-}
 
 OTA_DIR=/opt/mh-fake/otas
-for ota_file in pivot_ota_rg3205w_home.zip Home-ota-rg3205w.zip; do
+PIVOT_FILE=$(basename "$MH_PIVOT_URL")
+HOME_FILE=$(basename "$MH_HOME_URL")
+for ota_file in $(echo "$PIVOT_FILE" "$HOME_FILE" | tr ' ' '\n' | sort -u); do
     fpath="$OTA_DIR/$ota_file"
     if [ ! -f "$fpath" ] || [ "$(stat -c%s "$fpath" 2>/dev/null || echo 0)" -lt 1000 ]; then
         echo "[WARN] $ota_file no existe o esta vacio en $OTA_DIR" >&2

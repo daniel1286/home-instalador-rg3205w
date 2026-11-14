@@ -227,7 +227,7 @@ def get_ota():
     if sni_out:
         for line in sni_out.splitlines():
             lo = line.lower()
-            if "pivot_ota" in lo and ("get" in lo or "serving" in lo):
+            if ("pivot_ota" in lo or "home-ota" in lo or ".zip" in lo) and ("get" in lo or "serving" in lo):
                 info["downloading"] = True
             if "transfercomplete" in lo:
                 info["phase"] = "installing"

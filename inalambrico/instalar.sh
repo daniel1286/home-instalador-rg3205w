@@ -16,7 +16,6 @@ INSTALL_DIR="/opt/mh-fake"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$SCRIPT_DIR/backend"
 REPO_URL="https://github.com/daniel1286/home-instalador-rg3205w"
-PIVOT_OTA="pivot_ota_rg3205w_home.zip"
 HOME_OTA="Home-ota-rg3205w.zip"
 
 RED='\033[0;31m'
@@ -160,11 +159,6 @@ download_ota() {
     fi
 }
 
-download_ota "$PIVOT_OTA" "$REPO_URL/releases/latest/download/$PIVOT_OTA" || {
-    warn "Descargalo de: $REPO_URL/releases"
-    warn "Y copialo a: $INSTALL_DIR/otas/$PIVOT_OTA"
-}
-
 download_ota "$HOME_OTA" "$REPO_URL/releases/latest/download/$HOME_OTA" || {
     warn "Descargalo de: $REPO_URL/releases"
     warn "Y copialo a: $INSTALL_DIR/otas/$HOME_OTA"
@@ -178,13 +172,10 @@ echo "  WiFi:    Home-migracion / homeupdate"
 echo "  Canal:   36 (5 GHz)"
 echo "  Panel:   http://10.42.0.1:8080"
 echo ""
-if [ -f "$INSTALL_DIR/otas/$PIVOT_OTA" ] && [ -f "$INSTALL_DIR/otas/$HOME_OTA" ]; then
-    echo "  OTAs:    Pivot + Home ROM (listos)"
-elif [ -f "$INSTALL_DIR/otas/$PIVOT_OTA" ]; then
-    echo "  OTAs:    Pivot (listo) / Home ROM (PENDIENTE)"
-    echo "           Descargalo de: $REPO_URL/releases"
+if [ -f "$INSTALL_DIR/otas/$HOME_OTA" ]; then
+    echo "  OTAs:    Home ROM (listo)"
 else
-    echo "  OTAs:    Pendientes de descargar"
+    echo "  OTAs:    Pendiente de descargar"
     echo "           $REPO_URL/releases"
 fi
 echo ""

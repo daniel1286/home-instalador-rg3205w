@@ -172,8 +172,24 @@ class CWMPHandler(BaseHTTPRequestHandler):
         OTA_DIR = "/opt/mh-fake/otas"
         with STATE_LOCK:
             tc_count = STATE["transfer_complete_count"]
+
+        pivot_target = os.path.basename(self.OPTS.pivot_url) if self.OPTS.pivot_url else "Home-ota-rg3205w.zip"
+        home_target = os.path.basename(self.OPTS.home_url) if self.OPTS.home_url else "Home-ota-rg3205w.zip"
+
+        # Modo 1 ciclo (directo a Home OTA sin pivot)
+        if pivot_target == home_target or "home" in pivot_target.lower():
+            if tc_count > 0:
+                return None
+            target = pivot_target
+            fpath = os.path.join(OTA_DIR, target)
+            if not os.path.isfile(fpath) or os.path.getsize(fpath) < 1000:
+                log.warning("OTA no disponible: %s", fpath)
+                return None
+            return (self.OPTS.pivot_url, self.OPTS.pivot_size, target)
+
+        # Modo 2 ciclos (con pivot legado)
         if tc_count == 0:
-            target = "pivot_ota_rg3205w_home.zip"
+            target = pivot_target
             fpath = os.path.join(OTA_DIR, target)
             if not os.path.isfile(fpath) or os.path.getsize(fpath) < 1000:
                 log.warning("OTA pivot no disponible: %s", fpath)
@@ -182,7 +198,7 @@ class CWMPHandler(BaseHTTPRequestHandler):
         else:
             if not self.OPTS.home_url:
                 return None
-            target = "Home-ota-rg3205w.zip"
+            target = home_target
             fpath = os.path.join(OTA_DIR, target)
             if not os.path.isfile(fpath) or os.path.getsize(fpath) < 1000:
                 log.warning("Home OTA no disponible: %s", fpath)
@@ -233,7 +249,7 @@ class CWMPHandler(BaseHTTPRequestHandler):
                     return
                 url, size, target = ota
                 tc = STATE["transfer_complete_count"]
-                phase = "PIVOT" if tc == 0 else "HOME-OTA"
+                phase = "HOME-OTA" if (tc > 0 or "home" in target.lower()) else "PIVOT"
 
                 if getattr(self.OPTS, "no_cwmp_download", False) and phase == "PIVOT":
                     log.info("    PIVOT: Download RPC desactivado (--no-cwmp-download)")
