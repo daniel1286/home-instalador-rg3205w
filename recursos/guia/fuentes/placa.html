@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 The Home Project · SPDX-License-Identifier: Apache-2.0 -->
+<!-- Fuente de recursos/guia/placa.png (hacer.ps1): cómo se distinguen el Rev4 y el Rev5 con la tapa quitada -->
+<html lang="es"><head><meta charset="utf-8"><title>placa</title>
+<link rel="stylesheet" href="estilo.css"><script src="placa.js"></script></head>
+<body>
+  <div class="fila dos" id="placas"></div>
+  <div class="pie">Esquema de la placa vista por detrás, con la tapa quitada. Las piezas no están a escala.</div>
+<script>
+  const t = (num, tit, det, dibujo, clave) =>
+    `<div class="tarjeta${clave ? ' clave' : ''}"><div class="num" style="width:auto;padding:0 9px;border-radius:13px">${num}</div>${dibujo}<div class="tit">${tit}</div><div class="det">${det}</div></div>`;
+  document.getElementById('placas').innerHTML = [
+    t('Rev4', 'USB-C soldado', 'Arriba a la derecha hay un conector USB-C: <b>vale un cable USB-C normal</b>', placa({ rev: 4 })),
+    t('Rev5', 'Hueco vacío', 'Ese hueco está vacío y al lado está el <b>J4902</b>. Es la más habitual', placa({ rev: 5 }), true),
+  ].join('');
+</script>
+</body></html>

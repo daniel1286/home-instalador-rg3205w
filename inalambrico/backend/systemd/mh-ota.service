@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+EnvironmentFile=-/etc/default/mh-fake
 ExecStart=/usr/bin/python3 /opt/mh-fake/ota_server.py \
     --bind 0.0.0.0:8000 --root /opt/mh-fake/otas
 Restart=on-failure

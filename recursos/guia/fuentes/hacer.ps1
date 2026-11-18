@@ -5,6 +5,9 @@
 # ventana. Miden 520 px, lo que mide la columna de la guía en la ventana del instalador, y se dibujan al doble (1040 px)
 # para que se vean nítidas con escalado. Cada página se dibuja alta y luego se recorta el fondo que sobra por abajo.
 # Uso: powershell -NoProfile -ExecutionPolicy Bypass -File hacer.ps1   (Bypass vale solo para ese proceso)
+#      con -Paginas placa,j4902_pines rehace solo esas
+param([string[]]$Paginas = @('recovery_1', 'recovery_2', 'recovery_menu', 'driver_1', 'driver_2', 'driver_3', 'driver_4',
+    'placa', 'j4902_pines', 'primer_arranque'))
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
@@ -14,7 +17,8 @@ $edge = @("${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe", "$en
     Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $edge) { throw 'No se encuentra Microsoft Edge' }
 
-$paginas = 'recovery_1', 'recovery_2', 'recovery_menu', 'driver_1', 'driver_2', 'driver_3', 'driver_4'
+# Con -File, «a,b» llega como un solo texto
+$paginas = $Paginas | ForEach-Object { $_ -split ',' } | Where-Object { $_ }
 $fondo = [System.Drawing.Color]::FromArgb(0x1b, 0x1a, 0x18)
 $perfil = Join-Path $env:TEMP 'guia_edge'
 

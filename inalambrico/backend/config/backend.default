@@ -24,3 +24,7 @@ MH_HOME_SIZE=1108418366
 # Credenciales Basic que el aparato manda al ACS. Vacío = aceptar cualquiera
 # (recomendado: un CPE ya aprovisionado manda las suyas y no las conocemos).
 MH_ACS_AUTH=
+
+# Contar la instalación por Pi en las estadísticas de Home (anónimo, sin
+# identificador: solo que fue por Pi y qué versión de Home). 0 = no contar.
+MH_CONTAR=1

@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 The Home Project · SPDX-License-Identifier: Apache-2.0 -->
+<!-- Fuente de recursos/guia/primer_arranque.png (hacer.ps1): lo que se ve la primera vez que arranca Home -->
+<html lang="es"><head><meta charset="utf-8"><title>primer_arranque</title>
+<link rel="stylesheet" href="estilo.css"><script src="aparato.js"></script>
+<style>.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); } .tres .tarjeta { padding-top: 38px; }</style></head>
+<body>
+  <div class="fila tres" id="pasos"></div>
+  <div class="pie">La primera vez, del splash al asistente pueden pasar varios minutos. Es normal.</div>
+<script>
+  document.getElementById('pasos').innerHTML = [
+    tarjeta({ num: 1, tit: 'Splash de Home', det: 'Nada más enchufarla', dibujo: aparato({ pantalla: 'home', botones: false }) }),
+    tarjeta({ num: 2, tit: 'Arrancando', det: 'Varios minutos: <b>no la desenchufes</b>', clave: true, dibujo: aparato({ pantalla: 'arranque', botones: false }) }),
+    tarjeta({ num: 3, tit: 'Asistente', det: 'Idioma, Wi-Fi y qué instalar', dibujo: aparato({ pantalla: 'asistente', botones: false }) }),
+  ].join('');
+</script>
+</body></html>

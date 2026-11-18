@@ -3,9 +3,10 @@
 
 // La Askey dibujada de frente (la misma silueta que el icono de Home), con lo que se ve en su pantalla y qué botones se
 // pulsan. Arriba, los dos de volumen; el de encendido está detrás y sale en un globo a la derecha.
-//   pantalla: 'apagada' | 'azul' | 'negra' | 'menu'
+//   pantalla: 'apagada' | 'azul' | 'negra' | 'menu' | 'home' (splash) | 'arranque' (animación) | 'asistente'
 //   vol, enc: 'suelto' | 'pulsado' | 'una' (pulsar una vez)
-function aparato({ pantalla = 'apagada', vol = 'suelto', enc = 'suelto', ancho = 190 } = {}) {
+//   botones: false para dibujar solo el aparato, sin los botones ni sus nombres
+function aparato({ pantalla = 'apagada', vol = 'suelto', enc = 'suelto', ancho = 190, botones = true } = {}) {
   const A = '#e0a85a', GRIS = '#55504a', GRIS2 = '#77716a';
   // Con «una vez» los dos de volumen se quedan sin marcar: cuál es el «+» lo dice el texto
   const boton = e => e === 'pulsado' ? `fill="${A}" stroke="${A}"` : `fill="${GRIS}" stroke="${GRIS2}"`;
@@ -21,6 +22,21 @@ function aparato({ pantalla = 'apagada', vol = 'suelto', enc = 'suelto', ancho =
     for (let i = 0; i < 6; i++) dentro += `<rect x="41" y="${59 + i * 6}" width="${[46, 52, 44, 50, 40, 36][i]}" height="3" rx="1" fill="${i === 1 ? '#fff' : '#4aa3ff'}"/>`;
     dentro += `<rect x="39" y="63.5" width="58" height="6" rx="1.5" fill="none" stroke="${A}" stroke-width="1.2"/>`;
   }
+  if (pantalla === 'home') dentro = `<rect x="36" y="46" width="80" height="50" rx="3" fill="#1b1a18"/>
+      <text x="76" y="75" font-size="13" font-weight="700" fill="${A}" text-anchor="middle">Home</text>`;
+  if (pantalla === 'arranque') dentro = `<rect x="36" y="46" width="80" height="50" rx="3" fill="#1b1a18"/>
+      <circle cx="76" cy="71" r="11" fill="none" stroke="#37342f" stroke-width="2.4"/>
+      <path d="M76 60 A11 11 0 0 1 87 71" fill="none" stroke="${A}" stroke-width="2.4" stroke-linecap="round"/>`;
+  if (pantalla === 'asistente') dentro = `<rect x="36" y="46" width="80" height="50" rx="3" fill="#1b1a18"/>
+      <rect x="44" y="53" width="34" height="4" rx="2" fill="#f3efe8"/><rect x="44" y="61" width="50" height="3" rx="1.5" fill="#77716a"/>
+      <rect x="44" y="68" width="64" height="9" rx="3" fill="#262420" stroke="#37342f" stroke-width="0.8"/>
+      <rect x="84" y="83" width="24" height="7" rx="3.5" fill="${A}"/>`;
+
+  if (!botones) return `<svg width="${ancho}" height="${ancho * 96 / 124}" viewBox="14 20 124 96" xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 26 H122 Q130 26 130.5 34 L133.5 104 Q134 112 126 112 H26 Q18 112 18.5 104 L21.5 34 Q22 26 30 26 Z" fill="#2c2a27" stroke="#ddd6ca" stroke-width="2.2" stroke-linejoin="round"/>
+    ${dentro}
+    <path d="M30 103 H122 M30 107 H122" stroke="#55504a" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`;
 
   return `<svg width="${ancho}" height="${ancho * 128 / 190}" viewBox="0 0 190 128" xmlns="http://www.w3.org/2000/svg">
     <defs>

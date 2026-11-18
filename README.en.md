@@ -79,7 +79,7 @@ A single `.exe` that does everything: downloads Home, checks integrity, sets up 
     <td><img src="recursos/capturas/3_desbloquear.png" alt="Unlock bootloader"></td>
   </tr>
   <tr>
-    <td><b>USB driver.</b> Downloads and installs it in one click if missing.</td>
+    <td><b>USB driver.</b> If missing, downloads it and assigns it to the Askey in one click.</td>
     <td><b>3. Unlock</b> (<i>Desbloquear</i>). Unlocks the bootloader if needed.</td>
   </tr>
   <tr>
@@ -112,6 +112,7 @@ The guide for opening the device, making the cable and entering fastboot is buil
 
 - 64-bit Windows 10/11 with .NET Framework 4.8 (ships with Windows)
 - Internet to download Home, fastboot and the driver · ~4 GB free
+- Screens from 1366×768 and scaling from 100 to 175 %: the window adapts and can be resized
 - Askey RG3205W (Rev4 or Rev5) + cable ([which one](https://github.com/daniel1286/home-rom-rg3205w/blob/main/guias/INSTALL.md#2-rev4-or-rev5-and-connecting-it-to-the-pc))
 
 </details>
@@ -123,9 +124,12 @@ The guide for opening the device, making the cable and entering fastboot is buil
 - Only flashes `boot`, `recovery`, `vendor`, `system` and `splash`, only formats `cache` and `userdata`
 - Checks the device is an RG3205W, still the same one and still unlocked
 - Won't flash if SHA256 or size doesn't match
-- Asks Home's server which versions exist, sending nothing · the zip downloads from GitHub Releases through Home's server (which only counts it with the box checked) and its SHA256 is checked
+- Asks Home's server which versions exist, sending nothing · the zip downloads from GitHub Releases through Home's server (which only counts it with the box checked) and its SHA256 is checked · if the server doesn't answer, it reads the Releases straight from GitHub
+- Always uses its own fastboot (the one from Google's tools, verified) and warns if another fastboot or adb is open
+- Every fastboot command targets the Askey by serial number and has a time limit: if it gets disconnected, it says so instead of hanging
+- The PC doesn't go to sleep while downloading or flashing
 - Never restarts the Askey or relocks the bootloader
-- Stores its files in `%LOCALAPPDATA%\Home\Instalador` · Home in `Downloads\Home`
+- Stores its files in `%LOCALAPPDATA%\Home\Instalador` · Home in `Downloads\Home`, or in `%LOCALAPPDATA%\Home\Descargas` if Downloads is in OneDrive
 
 </details>
 
@@ -141,11 +145,13 @@ The box comes checked. When it finishes, the installer tells the Home statistics
 ```
 
 - No ID, no name, nothing about the PC or the Askey · the IP address is not stored
-- Only sent when an installation ends, or when the download, driver or unlock fails
+- Only sent when an installation ends, or when the download, driver or unlock fails · each step name belongs to a single job (`descargar`, `comprobar_zip`… for the download; `controladores`; `desbloquear`; `verificar_imagenes`, `conectar`, `bloqueada`, `grabar_*`, `formatear_*` for the installation)
+- Stopping the download or cancelling the unlock or the administrator prompt doesn't count as a failure
+- If the server announces it in its version list, the cause of a failure is added (`"motivo":"usb"`) and, when the window is closed without installing, how far it got (`"resultado":"abandono","paso":"sin_driver"`); if it doesn't, nothing of that is sent
 - The Home download goes through Home's server on its way to GitHub: checked, it is counted (day, version and that it comes from the installer); unchecked, it is not
 - Can be unchecked before installing and is remembered on this PC · it stays fixed while installing
 - If there is no Internet or the server doesn't answer, nothing happens: the installation carries on
-- **Qué se envía** (*What is sent*), under the box, shows this same text
+- **Qué se envía** (*What is sent*), under the box, explains it in a table and shows this same text
 
 </details>
 
@@ -171,9 +177,13 @@ Windows shows it for unsigned, rarely downloaded programs. Check SHA256 from eac
 ```powershell
 Get-FileHash .\Instalar-Home.exe -Algorithm SHA256
 ```
+With Windows 11 **Smart App Control** turned on, Windows won't open an unsigned `.exe`. It can be turned off in *Windows Security → App & browser control*, but Windows then won't let you turn it back on without reinstalling; if you'd rather not, use another PC or the wireless method.
 
 **Do I need to run it as administrator?**
-No. It only asks for elevation to install the USB driver.
+No. It only asks for elevation to assign the USB driver to the Askey. On a standard account, Windows asks for the password of whoever administers the PC.
+
+**The window doesn't fit or looks small.**
+It adapts to the screen size, can be maximised and follows Windows scaling (also when moved to another screen) and the Accessibility «Text size». If something doesn't fit, it scrolls.
 
 **How do I remove it?**
 Delete `Instalar-Home.exe` and `%LOCALAPPDATA%\Home\Instalador`.
@@ -198,11 +208,14 @@ compilar.cmd
 
 Result: `salida\Instalar-Home.exe`. GitHub Actions builds on every push; a `vX.Y` tag triggers a release (if it already exists, its .exe and SHA256 are replaced).
 
-Demo mode (no device needed):
+Signing (optional): with a code signing certificate, `compilar.cmd` signs the `.exe` with a timestamp. Locally, with `FIRMA_PFX` (and `FIRMA_CLAVE`) or `FIRMA_HUELLA` (an installed certificate or one on a token); in GitHub Actions, with the `FIRMA_PFX_BASE64` and `FIRMA_CLAVE` secrets. Without a certificate it still builds, unsigned.
+
+Demo mode (no device needed), to review each screen:
 ```
 set INSTALADOR_DEMO=instalando
 salida\Instalar-Home.exe
 ```
+Values: `descargar`, `descargando`, `sin_red`, `conectar`, `revisar`, `usb`, `driver`, `desbloquear`, `instalar`, `instalando`, `hecho`, `fallo`, `informe`, `guia`, `opciones`, `aviso`, `envio`.
 
 | File | Purpose |
 |---|---|
@@ -210,9 +223,12 @@ salida\Instalar-Home.exe
 | `fuente/Ventana.xaml` · `Ventana.cs` | Window and UI |
 | `fuente/Pantallas.cs` · `Acciones.cs` | Screens and button actions |
 | `fuente/Trabajos.cs` | Download, driver, unlock, flash |
-| `fuente/Red.cs` | Version list (Home's server) and resumable downloads |
+| `fuente/Red.cs` | Version list (Home's server, or GitHub as a fallback) and resumable downloads with retries |
 | `fuente/Imagenes.cs` | Extract and verify images |
-| `fuente/Fastboot.cs` | Locate and run fastboot |
+| `fuente/Fastboot.cs` | Check and run fastboot, with serial and time limit, and explain its failures |
+| `fuente/Usb.cs` | What Windows sees over USB (driver, EDL, charge-only cable) and other open fastboot instances |
+| `fuente/DriverUsb.cs` | Assign Google's driver to the Askey (like «Have Disk…») |
+| `fuente/Sistema.cs` | Downloads and OneDrive, sleep, account type and text size |
 | `fuente/Guia.cs` · `Piezas.cs` | Built-in installation guide |
 | `recursos/guia/fuentes/` | Sources of the guide drawings (`hacer.ps1` redraws them with Edge) |
 | `fuente/Estadistica.cs` | Anonymous installation count and failure report |
@@ -246,16 +262,25 @@ After a factory reset, the device tries to reach the original servers — but th
 
 **1.** Flash Raspberry Pi OS to the SD card and connect the Pi to the router via ethernet
 
-**2.** Clone and install:
+**2.** Install in one line (installs git itself, downloads the project and runs it):
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/daniel1286/home-instalador-rg3205w/main/inalambrico/arranque.sh | sudo bash
+```
+
+<details>
+<summary>Or step by step</summary>
+
+```bash
+sudo apt install -y git
 git clone https://github.com/daniel1286/home-instalador-rg3205w.git
 cd home-instalador-rg3205w/inalambrico
 sudo bash instalar.sh
 ```
+</details>
 
 > [!NOTE]
-> The script installs packages, sets up the 5 GHz WiFi access point, generates TLS certificates, installs the 9 backend services and downloads the OTA files from Releases.
+> The script installs any missing packages (git included), unblocks and sets up the 5 GHz WiFi, checks the Pi supports it, generates TLS certificates, installs the backend services and downloads the published OTA, verifying its hash. Needs a Pi 3B+, 4, 5 or Zero 2 W (the ones with 5 GHz).
 
 **3.** Reboot: `sudo reboot` — the backend starts automatically.
 
@@ -391,7 +416,7 @@ Yes → edit `/etc/hostapd/hostapd.conf` → `sudo systemctl restart hostapd`
 <br>
 
 - [Inter](https://rsms.me/inter/), by Rasmus Andersson — [SIL Open Font License 1.1](recursos/letras/OFL.txt)
-- Board photos: [zry98/movistar-home-hacks](https://github.com/zry98/movistar-home-hacks)
+- Board and J4902 documentation: [zry98](https://github.com/zry98)
 - fastboot and Google USB Driver are downloaded from Google when needed
 
 </details>

@@ -76,7 +76,7 @@ Un `.exe` que lo hace todo: descarga Home, comprueba que no se ha dañado, prepa
     <td><img src="recursos/capturas/3_desbloquear.png" alt="Desbloquear bootloader"></td>
   </tr>
   <tr>
-    <td><b>Driver USB.</b> Lo descarga e instala con un clic si falta.</td>
+    <td><b>Driver USB.</b> Si falta, lo descarga y se lo asigna a la Askey con un clic.</td>
     <td><b>3. Desbloquear.</b> Desbloquea el bootloader si hace falta.</td>
   </tr>
   <tr>
@@ -109,6 +109,7 @@ La guía para abrir el aparato, hacer el cable y entrar en fastboot viene dentro
 
 - Windows 10/11 de 64 bits con .NET Framework 4.8 (ya viene con Windows)
 - Internet para descargar Home, fastboot y el driver · ~4 GB libres
+- Pantallas desde 1366×768 y escalado del 100 al 175 %: la ventana se adapta y se puede cambiar de tamaño
 - Askey RG3205W (Rev4 o Rev5) + cable ([cuál necesitas](https://github.com/daniel1286/home-rom-rg3205w/blob/main/guias/INSTALAR.md#2-saber-si-es-rev4-o-rev5-y-conectarlo-al-pc))
 
 </details>
@@ -120,9 +121,12 @@ La guía para abrir el aparato, hacer el cable y entrar en fastboot viene dentro
 - Solo graba `boot`, `recovery`, `vendor`, `system` y `splash`, y solo formatea `cache` y `userdata`
 - Comprueba que es un RG3205W, que sigue siendo el mismo y que está desbloqueado
 - No graba nada si SHA256 o tamaño no cuadran
-- Pregunta al servidor de Home qué versiones hay, sin enviar nada · el zip baja de las Releases de GitHub, pasando por el servidor de Home (que solo lo cuenta con la casilla marcada), y se comprueba su SHA256
+- Pregunta al servidor de Home qué versiones hay, sin enviar nada · el zip baja de las Releases de GitHub, pasando por el servidor de Home (que solo lo cuenta con la casilla marcada), y se comprueba su SHA256 · si el servidor no contesta, lee las Releases directamente de GitHub
+- Usa siempre su propio fastboot (el de las herramientas de Google, comprobado) y avisa si otro fastboot o adb está abierto
+- Cada orden de fastboot va a la Askey por su número de serie y con tiempo máximo: si se desconecta, lo dice y no se queda colgado
+- Mientras descarga o graba, el PC no se suspende
 - Nunca reinicia la Askey ni rebloquea el bootloader
-- Guarda lo suyo en `%LOCALAPPDATA%\Home\Instalador` · Home en `Descargas\Home`
+- Guarda lo suyo en `%LOCALAPPDATA%\Home\Instalador` · Home en `Descargas\Home`, o en `%LOCALAPPDATA%\Home\Descargas` si Descargas está en OneDrive
 
 </details>
 
@@ -138,11 +142,13 @@ La casilla viene marcada. Al terminar, el instalador envía a las estadísticas 
 ```
 
 - Sin identificador, sin nombre y sin datos del PC ni de la Askey · la dirección IP no se guarda
-- Solo se envía al acabar una instalación, o si falla la descarga, el driver o el desbloqueo
+- Solo se envía al acabar una instalación, o si falla la descarga, el driver o el desbloqueo · cada paso tiene un nombre de un solo trabajo (`descargar`, `comprobar_zip`… para la descarga; `controladores`; `desbloquear`; `verificar_imagenes`, `conectar`, `bloqueada`, `grabar_*`, `formatear_*` para la instalación)
+- Detener la descarga, cancelar el desbloqueo o el permiso de administrador no cuentan como fallo
+- Si el servidor lo anuncia en su lista de versiones, se añade la causa de un fallo (`"motivo":"usb"`) y, al cerrar sin haber instalado, hasta qué paso se llegó (`"resultado":"abandono","paso":"sin_driver"`); si no lo anuncia, no se envía
 - La descarga de Home pasa por el servidor de Home camino de GitHub: marcada, la cuenta (día, versión y que viene del instalador); desmarcada, no
 - Se puede desmarcar antes de instalar y se recuerda en este PC · durante la instalación queda fija
 - Si no hay Internet o no responde, no pasa nada: la instalación sigue igual
-- **Qué se envía**, debajo de la casilla, enseña este mismo texto
+- **Qué se envía**, debajo de la casilla, lo cuenta en una tabla y enseña este mismo texto
 
 </details>
 
@@ -168,9 +174,13 @@ Sale con programas poco descargados sin firma comercial. Comprueba SHA256 de cad
 ```powershell
 Get-FileHash .\Instalar-Home.exe -Algorithm SHA256
 ```
+Con el **Control inteligente de aplicaciones** de Windows 11 activado, Windows no deja abrir un `.exe` sin firmar. Se puede desactivar en *Seguridad de Windows → Control de aplicaciones y navegador*, pero después Windows no deja volver a activarlo sin reinstalar; si prefieres no hacerlo, usa otro PC o la vía inalámbrica.
 
 **¿Necesito ejecutar como administrador?**
-No. Solo pide elevación para el driver USB.
+No. Solo pide elevación para asignar el driver USB a la Askey. En una cuenta estándar, Windows pide la contraseña de quien administra el PC.
+
+**La ventana no cabe o se ve pequeña.**
+Se adapta sola al tamaño de la pantalla, se puede maximizar y sigue el escalado de Windows (también al pasarla a otra pantalla) y el «Tamaño del texto» de Accesibilidad. Si algo no cabe, se desplaza.
 
 **¿Cómo lo quito?**
 Borra `Instalar-Home.exe` y `%LOCALAPPDATA%\Home\Instalador`.
@@ -195,11 +205,14 @@ compilar.cmd
 
 Resultado en `salida\Instalar-Home.exe`. GitHub Actions lo compila en cada push; una tag `vX.Y` publica la release (si ya existe, cambia su .exe y su SHA256).
 
-Modo demo (sin aparato):
+Firma (opcional): con un certificado de firma de código, `compilar.cmd` firma el `.exe` con sello de tiempo. En el PC, con `FIRMA_PFX` (y `FIRMA_CLAVE`) o `FIRMA_HUELLA` (certificado instalado o en un token); en GitHub Actions, con los secretos `FIRMA_PFX_BASE64` y `FIRMA_CLAVE`. Sin certificado, compila igual, sin firmar.
+
+Modo demo (sin aparato), para revisar cada pantalla:
 ```
 set INSTALADOR_DEMO=instalando
 salida\Instalar-Home.exe
 ```
+Valores: `descargar`, `descargando`, `sin_red`, `conectar`, `revisar`, `usb`, `driver`, `desbloquear`, `instalar`, `instalando`, `hecho`, `fallo`, `informe`, `guia`, `opciones`, `aviso`, `envio`.
 
 | Archivo | Qué hace |
 |---|---|
@@ -207,9 +220,12 @@ salida\Instalar-Home.exe
 | `fuente/Ventana.xaml` · `Ventana.cs` | La ventana y su aspecto |
 | `fuente/Pantallas.cs` · `Acciones.cs` | Pantallas y botones |
 | `fuente/Trabajos.cs` | Descargar, driver, desbloquear, instalar |
-| `fuente/Red.cs` | Lista de versiones (servidor de Home) y descargas con reanudación |
+| `fuente/Red.cs` | Lista de versiones (servidor de Home, o GitHub si no contesta) y descargas con reanudación y reintentos |
 | `fuente/Imagenes.cs` | Descomprimir y comprobar imágenes |
-| `fuente/Fastboot.cs` | Buscar y lanzar fastboot |
+| `fuente/Fastboot.cs` | Comprobar y lanzar fastboot, con serie y tiempo máximo, y explicar sus fallos |
+| `fuente/Usb.cs` | Lo que ve Windows por USB (driver, EDL, cable sin datos) y otros fastboot abiertos |
+| `fuente/DriverUsb.cs` | Asignar el driver de Google a la Askey (como «Usar disco…») |
+| `fuente/Sistema.cs` | Descargas y OneDrive, suspensión, tipo de cuenta y tamaño del texto |
 | `fuente/Guia.cs` · `Piezas.cs` | Guía de instalación |
 | `recursos/guia/fuentes/` | Fuentes de los dibujos de la guía (`hacer.ps1` los rehace con Edge) |
 | `fuente/Estadistica.cs` | Contar la instalación (anónimo) e informe de un fallo |
@@ -243,16 +259,25 @@ Tras un factory reset, el dispositivo intenta hablar con los servidores original
 
 **1.** Instala Raspberry Pi OS en la SD y conecta la Pi al router por ethernet
 
-**2.** Clona e instala:
+**2.** Instala, todo en una línea (instala git solo, descarga el proyecto y arranca):
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/daniel1286/home-instalador-rg3205w/main/inalambrico/arranque.sh | sudo bash
+```
+
+<details>
+<summary>O paso a paso, si lo prefieres</summary>
+
+```bash
+sudo apt install -y git
 git clone https://github.com/daniel1286/home-instalador-rg3205w.git
 cd home-instalador-rg3205w/inalambrico
 sudo bash instalar.sh
 ```
+</details>
 
 > [!NOTE]
-> El script instala paquetes, configura el WiFi 5 GHz, genera certificados TLS, monta los 9 servicios del backend y descarga los archivos OTA de Releases.
+> El script instala los paquetes que falten (git incluido), desbloquea y configura el WiFi 5 GHz, comprueba que la Pi lo soporte, genera certificados TLS, monta los servicios del backend y descarga la OTA de la versión publicada comprobando su huella. Necesita una Pi 3B+, 4, 5 o Zero 2 W (las que tienen 5 GHz).
 
 **3.** Reinicia: `sudo reboot` — el backend arranca solo.
 
@@ -388,7 +413,7 @@ Sí → edita `/etc/hostapd/hostapd.conf` → `sudo systemctl restart hostapd`
 <br>
 
 - [Inter](https://rsms.me/inter/), de Rasmus Andersson — [SIL Open Font License 1.1](recursos/letras/OFL.txt)
-- Fotos de la placa: [zry98/movistar-home-hacks](https://github.com/zry98/movistar-home-hacks)
+- Documentación de la placa y el J4902: [zry98](https://github.com/zry98)
 - fastboot y Google USB Driver se descargan de Google al usarlos
 
 </details>

@@ -27,6 +27,17 @@ log()  { echo -e "${GREEN}[+]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 err()  { echo -e "${RED}[x]${NC} $1"; exit 1; }
 
+# Reintenta una orden hasta tres veces: la red de una Pi recien instalada falla a veces
+reintentar() {
+    local i
+    for i in 1 2 3; do
+        "$@" && return 0
+        warn "Fallo (intento $i de 3). Reintento en 5 s..."
+        sleep 5
+    done
+    return 1
+}
+
 [ "$(id -u)" -ne 0 ] && err "Ejecutar como root: sudo bash instalar.sh"
 [ "$(uname)" != "Linux" ] && err "Solo compatible con Linux"
 [ ! -d "$BACKEND_DIR" ] && err "No se encuentra $BACKEND_DIR"
@@ -38,18 +49,21 @@ echo "  LineageOS 22.x / Android 15"
 echo "================================================="
 echo ""
 
-# 1. Paquetes
+# 1. Paquetes (git y las herramientas de WiFi entre ellos, para que valga en una Pi limpia)
 log "Instalando paquetes..."
-apt-get update -qq
-apt-get install -y -qq \
+reintentar apt-get update ||
+    err "No se pudo actualizar la lista de paquetes. Conecta la Pi a internet por ethernet y repite."
+reintentar apt-get install -y \
     hostapd dnsmasq \
     python3 python3-cryptography \
-    iptables wget
+    iptables wget ca-certificates \
+    git rfkill iw ||
+    err "No se pudieron instalar los paquetes. Mira el error de arriba (suele ser la red)."
 
 # 2. Parar servicios en conflicto
 log "Preparando servicios..."
-systemctl stop systemd-timesyncd 2>/dev/null || true
-systemctl disable systemd-timesyncd 2>/dev/null || true
+# La Pi mantiene su propia hora en punto (la del Askey la da ntp_server por su cuenta, en wlan0)
+systemctl enable --now systemd-timesyncd 2>/dev/null || true
 systemctl unmask hostapd 2>/dev/null || true
 systemctl stop hostapd dnsmasq 2>/dev/null || true
 
@@ -68,22 +82,41 @@ for f in run-sni.sh run-cwmp.sh run-cwmp-http.sh dhcp-tls-gate.sh; do
     chmod +x "$INSTALL_DIR/$f"
 done
 
-# 5. Configurar hostapd (WiFi AP 5 GHz)
+# 5. Radio WiFi: desbloquearla, fijar el pais y comprobar que esta Pi hace AP en 5 GHz
+log "Preparando la radio WiFi (5 GHz)..."
+rfkill unblock wifi 2>/dev/null || true
+iw reg set ES 2>/dev/null || true
+# Que el pais quede fijado tambien tras reiniciar
+command -v raspi-config >/dev/null 2>&1 && raspi-config nonint do_wifi_country ES 2>/dev/null || true
+
+PHY=$(iw dev wlan0 info 2>/dev/null | awk '/wiphy/ {print "phy"$2}')
+CAPS=$([ -n "$PHY" ] && iw phy "$PHY" info 2>/dev/null || true)
+if [ -n "$CAPS" ]; then
+    echo "$CAPS" | grep -qE '\* AP' || warn "Este WiFi no anuncia modo punto de acceso; hostapd podria no arrancar."
+    # Solo se da por seguro que no hay 5 GHz si se leyo bien la banda de 2,4 pero no la de 5
+    if echo "$CAPS" | grep -qE '24[0-9]{2} MHz' && ! echo "$CAPS" | grep -qE '5[0-9]{3} MHz'; then
+        err "El WiFi de esta Pi no tiene 5 GHz. El RG3205W solo conecta en 5 GHz: usa una Pi 3B+, 4, 5 o Zero 2 W."
+    fi
+else
+    warn "No se pudo leer el WiFi (wlan0). Comprueba que la Pi tiene WiFi y que no esta bloqueado."
+fi
+
+# 6. Configurar hostapd (WiFi AP 5 GHz)
 log "Configurando punto de acceso WiFi (5 GHz, canal 36)..."
 cp "$BACKEND_DIR/config/hostapd.conf" /etc/hostapd/hostapd.conf
 sed -i 's|^#\?DAEMON_CONF=.*|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd 2>/dev/null || true
 
-# 6. Configurar dnsmasq (DNS + DHCP)
+# 7. Configurar dnsmasq (DNS + DHCP)
 log "Configurando DNS y DHCP..."
 [ -f /etc/dnsmasq.conf ] && cp /etc/dnsmasq.conf /etc/dnsmasq.conf.bak
 cp "$BACKEND_DIR/config/dnsmasq.conf" /etc/dnsmasq.conf
 echo "dhcp-script=$INSTALL_DIR/dhcp-tls-gate.sh" >> /etc/dnsmasq.conf
 
-# 7. Configuracion del backend
+# 8. Configuracion del backend
 log "Instalando configuracion..."
 cp "$BACKEND_DIR/config/backend.default" /etc/default/mh-fake
 
-# 8. IP estatica en wlan0
+# 9. IP estatica en wlan0
 log "Configurando red (10.42.0.1/24 en wlan0)..."
 if [ -f /etc/dhcpcd.conf ]; then
     if ! grep -q "interface wlan0" /etc/dhcpcd.conf; then
@@ -114,54 +147,80 @@ fi
 sysctl -w net.ipv4.ip_forward=1 >/dev/null
 echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-home-backend.conf
 
-# 9. Servicios systemd
+# 10. Servicios systemd
 log "Instalando servicios systemd..."
 for f in "$BACKEND_DIR/systemd/"mh-*.service; do
     cp "$f" /etc/systemd/system/
 done
 systemctl daemon-reload
 
-# 10. Generar certificados TLS
+# 11. Generar certificados TLS
 log "Generando certificados TLS..."
 cd "$INSTALL_DIR"
 python3 generate_certs.py
 
-# 11. Habilitar servicios
+# 12. Habilitar servicios
 log "Habilitando servicios..."
 for svc in mh-wlan-ip mh-sni mh-captive mh-ntp mh-cwmp mh-cwmp-http mh-ota mh-panel; do
     systemctl enable "$svc" 2>/dev/null
 done
 systemctl enable hostapd dnsmasq
 
-# 12. Descargar OTAs si no existen (o estan vacios por una descarga fallida)
-download_ota() {
-    local name="$1" url="$2" dest="$INSTALL_DIR/otas/$1"
-    if [ -f "$dest" ] && [ "$(stat -c%s "$dest")" -gt 1000 ]; then
-        log "$name ya existe ($(du -h "$dest" | cut -f1)). Saltando."
-        return 0
+# 13. Descargar la OTA de la version publicada (la que diga el Worker) y comprobar su huella
+WORKER_URL="${MH_WORKER_URL:-https://home-rom.home1286.workers.dev/v1/ota/rg3205w.json}"
+OTA_DEST="$INSTALL_DIR/otas/$HOME_OTA"
+
+descargar_ota() {
+    log "Preguntando al Worker por la version publicada..."
+    local meta url="" sha="" version=""
+    meta=$(wget -q -O - "$WORKER_URL" 2>/dev/null) || meta=""
+    if [ -n "$meta" ]; then
+        # La completa es el paquete sin "desde"; de ahi salen su url y su sha256
+        read -r version url sha < <(printf '%s' "$meta" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    c = next((p for p in d.get("paquetes", []) if "desde" not in p), d)
+    print(d.get("version",""), c.get("url",""), c.get("sha256",""))
+except Exception:
+    pass
+') || true
     fi
-    rm -f "$dest"
-    log "Descargando $name desde GitHub Releases..."
-    if wget --no-verbose -O "$dest" "$url"; then
-        local sz
-        sz=$(stat -c%s "$dest")
-        if [ "$sz" -lt 1000 ]; then
-            rm -f "$dest"
-            warn "$name: descarga corrupta ($sz bytes). Borrado."
-            return 1
-        fi
-        log "$name descargado ($(du -h "$dest" | cut -f1))."
-        return 0
+    if [ -z "$url" ]; then
+        warn "No se pudo leer el Worker. Uso la ultima Release de GitHub (sin huella que comprobar)."
+        url="$REPO_URL/releases/latest/download/$HOME_OTA"
     else
-        rm -f "$dest"
-        warn "No se pudo descargar $name."
-        return 1
+        log "Version publicada: Home $version."
+        # La descarga es de la Pi, no de la app Actualizaciones: que el Worker la cuente como tal
+        url="${url/origen=app/origen=pi}"
     fi
+    # Para el contador de ota_server: la version que se sirve (si no se sabe, no se cuenta)
+    [ -n "$version" ] && printf '%s' "$version" > "$INSTALL_DIR/otas/version.txt"
+    # Si ya esta la correcta (su huella cuadra), no se baja otra vez
+    if [ -n "$sha" ] && [ -f "$OTA_DEST" ] &&
+       [ "$(sha256sum "$OTA_DEST" | cut -d' ' -f1)" = "$sha" ]; then
+        log "La OTA ya esta y su huella cuadra. Saltando."
+        return 0
+    fi
+    rm -f "$OTA_DEST"
+    log "Descargando la OTA..."
+    reintentar wget --no-verbose -O "$OTA_DEST" "$url" ||
+        { rm -f "$OTA_DEST"; warn "No se pudo descargar la OTA."; return 1; }
+    local sz; sz=$(stat -c%s "$OTA_DEST" 2>/dev/null || echo 0)
+    [ "$sz" -lt 1000 ] && { rm -f "$OTA_DEST"; warn "OTA corrupta ($sz bytes)."; return 1; }
+    if [ -n "$sha" ]; then
+        if [ "$(sha256sum "$OTA_DEST" | cut -d' ' -f1)" != "$sha" ]; then
+            rm -f "$OTA_DEST"
+            err "La huella de la OTA no cuadra con la del Worker: no se sirve una imagen sin verificar."
+        fi
+        log "Huella verificada."
+    fi
+    log "OTA lista ($(du -h "$OTA_DEST" | cut -f1))."
 }
 
-download_ota "$HOME_OTA" "$REPO_URL/releases/latest/download/$HOME_OTA" || {
-    warn "Descargalo de: $REPO_URL/releases"
-    warn "Y copialo a: $INSTALL_DIR/otas/$HOME_OTA"
+descargar_ota || {
+    warn "Descargala de: $REPO_URL/releases"
+    warn "Y copiala a: $OTA_DEST"
 }
 
 echo ""

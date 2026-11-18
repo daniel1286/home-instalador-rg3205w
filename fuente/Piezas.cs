@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -18,27 +18,28 @@ namespace HomeInstalador
     // Piezas de las pantallas, de la guía y de las opciones
     partial class Instalador
     {
-        // Texto con **negritas**
+        // Texto con **negritas**. El tamaño pasa por Tam: nunca menos de 12 y con el tamaño del texto de Windows
         static TextBlock BloqueTexto(string texto, double tam = 13, string peso = "Normal", string color = "Texto", string margen = "0,0,0,10")
         {
-            var t = new TextBlock
+            double t = Tam(tam);
+            var b = new TextBlock
             {
                 TextWrapping = TextWrapping.Wrap,
-                FontSize = tam,
+                FontSize = t,
                 FontWeight = peso == "Bold" ? FontWeights.Bold : peso == "SemiBold" ? FontWeights.SemiBold : FontWeights.Normal,
                 Margin = Margen(margen),
-                LineHeight = tam * 1.45
+                LineHeight = t * 1.45
             };
             foreach (string p in Regex.Split(texto ?? "", @"(\*\*[^*]+\*\*)"))
             {
                 if (p.Length == 0) continue;
                 var m = Regex.Match(p, @"^\*\*(.+)\*\*$");
                 var r = new Run(m.Success ? m.Groups[1].Value : p);
-                if (m.Success) r.FontWeight = FontWeights.SemiBold;
-                t.Inlines.Add(r);
+                if (m.Success) { r.FontWeight = FontWeights.SemiBold; Pincel(r, FG, color == "Texto2" ? "Texto" : color); }
+                b.Inlines.Add(r);
             }
-            Pincel(t, FG, color);
-            return t;
+            Pincel(b, FG, color);
+            return b;
         }
 
         static Thickness Margen(string m) { return (Thickness)new ThicknessConverter().ConvertFromInvariantString(m); }
@@ -52,9 +53,10 @@ namespace HomeInstalador
 
         static Border Numero(int i, string margen)
         {
-            var n = new Border { Width = 22, Height = 22, CornerRadius = new CornerRadius(11), Margin = Margen(margen), VerticalAlignment = VerticalAlignment.Top };
+            double lado = Math.Max(22, Tam(12) * 1.8);
+            var n = new Border { Width = lado, Height = lado, CornerRadius = new CornerRadius(lado / 2), Margin = Margen(margen), VerticalAlignment = VerticalAlignment.Top };
             Pincel(n, Border.BackgroundProperty, "Acento");
-            var t = new TextBlock { Text = i.ToString(), FontSize = 11, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            var t = new TextBlock { Text = i.ToString(), FontSize = Tam(12), FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
             Pincel(t, FG, "TextoBoton");
             n.Child = t;
             return n;
@@ -72,7 +74,7 @@ namespace HomeInstalador
                 if (numeros) m = Numero(i, "0,0,12,0");
                 else
                 {
-                    m = new Ellipse { Width = 6, Height = 6, Margin = new Thickness(0, 7, 12, 0), VerticalAlignment = VerticalAlignment.Top };
+                    m = new Ellipse { Width = 6, Height = 6, Margin = new Thickness(0, Tam(14) * 0.5, 12, 0), VerticalAlignment = VerticalAlignment.Top };
                     Pincel(m, Shape.FillProperty, "Acento");
                 }
                 DockPanel.SetDock(m, Dock.Left);
@@ -88,12 +90,12 @@ namespace HomeInstalador
         static Grid Resumen(string[][] filas)
         {
             var g = new Grid();
-            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Max(110, Tam(13) * 8.5)) });
             g.ColumnDefinitions.Add(new ColumnDefinition());
             for (int i = 0; i < filas.Length; i++)
             {
                 g.RowDefinitions.Add(new RowDefinition());
-                var a = BloqueTexto(filas[i][0], 13, "Normal", "Texto2", "0,4,0,4");
+                var a = BloqueTexto(filas[i][0], 13, "Normal", "Texto2", "0,4,8,4");
                 var b = BloqueTexto(filas[i][1], 14, "SemiBold", filas[i].Length > 2 ? filas[i][2] : "Texto", "0,4,0,4");
                 Grid.SetRow(a, i);
                 Grid.SetRow(b, i);
@@ -112,7 +114,7 @@ namespace HomeInstalador
             var s = new StackPanel { Orientation = Orientation.Horizontal };
             var p = new Ellipse { Width = 8, Height = 8, Margin = new Thickness(0, 0, 9, 0), VerticalAlignment = VerticalAlignment.Center };
             Pincel(p, Shape.FillProperty, clave);
-            if (late)
+            if (late && animar)
                 p.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(1, 0.25, new Duration(TimeSpan.FromMilliseconds(900)))
                 {
                     AutoReverse = true,
@@ -124,9 +126,10 @@ namespace HomeInstalador
             return b;
         }
 
-        // Fases de la instalación, en una fila de puntos con nombre
+        // Fases de un trabajo, en una fila de puntos con nombre
         static readonly Dictionary<string, string> IconoFase = new Dictionary<string, string> { { "espera", "○" }, { "en_curso", "●" }, { "hecho", "✓" }, { "fallo", "✗" } };
         static readonly Dictionary<string, string> ColorFase = new Dictionary<string, string> { { "espera", "Texto2" }, { "en_curso", "Acento" }, { "hecho", "Ok" }, { "fallo", "Mal" } };
+        static readonly Dictionary<string, string> NombreFase = new Dictionary<string, string> { { "espera", "pendiente" }, { "en_curso", "en curso" }, { "hecho", "hecho" }, { "fallo", "ha fallado" } };
 
         static void PintarFases(Panel panel, List<Fase> pasos)
         {
@@ -134,13 +137,14 @@ namespace HomeInstalador
             foreach (var p in pasos)
             {
                 string estado = p.Estado;
-                var t = new TextBlock { FontSize = 12, Margin = new Thickness(0, 0, 14, 4) };
+                var t = new TextBlock { FontSize = Tam(12), Margin = new Thickness(0, 0, 14, 4) };
                 var r1 = new Run(IconoFase[estado] + " ") { FontWeight = FontWeights.Bold };
                 Pincel(r1, FG, ColorFase[estado]);
-                var r2 = new Run(p.Nombre);
+                var r2 = new Run(p.Texto);
                 Pincel(r2, FG, estado == "espera" ? "Texto2" : "Texto");
                 t.Inlines.Add(r1);
                 t.Inlines.Add(r2);
+                AutomationProperties.SetName(t, p.Texto + ": " + NombreFase[estado]);
                 panel.Children.Add(t);
             }
         }
@@ -152,25 +156,23 @@ namespace HomeInstalador
             return b;
         }
 
-        // Imagen de la guía: las propias van dentro del .exe; las de zry98 y del repositorio se bajan de GitHub
-        static FrameworkElement BloqueImagen(string fuente, string pie)
+        // Imagen de la guía: todas van dentro del .exe (se ven sin conexión). «alt» es lo que lee un lector de pantalla
+        static FrameworkElement BloqueImagen(string archivo, string pie, string alt)
         {
             var s = new StackPanel { Margin = new Thickness(0, 2, 0, 12) };
-            var img = new Image { Stretch = Stretch.Uniform };
-            try
-            {
-                var bmp = new BitmapImage();
-                bmp.BeginInit();
-                if (fuente.StartsWith("http")) bmp.UriSource = new Uri(fuente);
-                else bmp.StreamSource = Recurso("guia." + fuente);
-                bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.EndInit();
-                bmp.DownloadFailed += delegate { s.Visibility = Visibility.Collapsed; };
-                img.Source = bmp;
-            }
-            catch (Exception) { return null; }
-            s.Children.Add(new Border { CornerRadius = new CornerRadius(10), ClipToBounds = true, Child = img });
-            if (pie != null) s.Children.Add(BloqueTexto(pie, 11, "Normal", "Texto2", "0,4,0,0"));
+            var img = new Image { Stretch = Stretch.Uniform, MaxWidth = 520, HorizontalAlignment = HorizontalAlignment.Left };
+            var flujo = Recurso("guia." + archivo);
+            if (flujo == null) throw new InvalidOperationException("Falta la imagen de la guía " + archivo + " dentro del instalador.");
+            var bmp = new BitmapImage();
+            bmp.BeginInit();
+            bmp.StreamSource = flujo;
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.EndInit();
+            bmp.Freeze();
+            img.Source = bmp;
+            AutomationProperties.SetName(img, alt ?? pie ?? "");
+            s.Children.Add(new Border { CornerRadius = new CornerRadius(10), ClipToBounds = true, Child = img, HorizontalAlignment = HorizontalAlignment.Left });
+            if (pie != null) s.Children.Add(BloqueTexto(pie, 12, "Normal", "Texto2", "0,4,0,0"));
             return s;
         }
 
@@ -225,7 +227,11 @@ namespace HomeInstalador
         {
             var b = new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(12, 8, 12, 8), Margin = new Thickness(0, 0, 0, 12) };
             Pincel(b, Border.BackgroundProperty, "Campo");
-            var t = new TextBox { Text = texto, IsReadOnly = true, BorderThickness = new Thickness(0), Background = Brushes.Transparent, FontFamily = new FontFamily("Consolas"), FontSize = 12 };
+            var t = new TextBox
+            {
+                Text = texto, IsReadOnly = true, BorderThickness = new Thickness(0), Background = Brushes.Transparent, FontFamily = new FontFamily("Consolas"),
+                FontSize = Tam(12), TextWrapping = TextWrapping.Wrap
+            };
             Pincel(t, Control.ForegroundProperty, "Texto");
             b.Child = t;
             return b;

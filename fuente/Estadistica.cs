@@ -7,6 +7,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web.Script.Serialization;
 
 namespace HomeInstalador
@@ -16,9 +17,23 @@ namespace HomeInstalador
     // instalación no se entera
     static class Estadistica
     {
-        public const string Instalador = "2.1";
+        // La versión del instalador sale del propio .exe (AssemblyVersion): 2.1.0.0 → «2.1», 2.1.3.0 → «2.1.3»
+        public static readonly string Instalador = DeEnsamblado();
         const string Direccion = Rutas.Servidor + "/v1/instalacion";
         static readonly string Ajuste = Path.Combine(Rutas.Datos, "contar_instalacion.txt");
+        // Lo que el servidor acepta: X.Y o X.Y.Z
+        static readonly Regex VersionValida = new Regex(@"^\d{1,2}\.\d{1,2}(\.\d{1,2})?$");
+
+        // Lo que el servidor admite además del formato v1 (lo anuncia en la lista de versiones): «abandono» y «motivo»
+        public static volatile HashSet<string> Acepta = new HashSet<string>();
+
+        static string DeEnsamblado()
+        {
+            var v = typeof(Estadistica).Assembly.GetName().Version;
+            return v.Build > 0 ? v.Major + "." + v.Minor + "." + v.Build : v.Major + "." + v.Minor;
+        }
+
+        public static bool VersionPublicable(string numero) { return numero != null && VersionValida.IsMatch(numero); }
 
         // Marcada de serie. Si se desmarca, se recuerda en este PC
         public static bool Marcada
@@ -26,7 +41,8 @@ namespace HomeInstalador
             get
             {
                 try { return !File.Exists(Ajuste) || File.ReadAllText(Ajuste).Trim() != "no"; }
-                catch (Exception) { return true; }
+                catch (IOException) { return true; }
+                catch (UnauthorizedAccessException) { return true; }
             }
             set
             {
@@ -35,43 +51,75 @@ namespace HomeInstalador
                     Directory.CreateDirectory(Rutas.Datos);
                     File.WriteAllText(Ajuste, value ? "si" : "no");
                 }
-                catch (Exception) { }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
             }
         }
 
-        // Nombre fijo de cada paso, tal como lo lee el panel de estadísticas
-        static readonly Dictionary<string, string> Nombres = new Dictionary<string, string>
+        // Nombre fijo de cada paso, tal como lo lee el panel. Cada nombre es de un solo trabajo, así el panel sabe de qué
+        // trabajo es cada fila: descargar (herramientas … comprobar_imagenes), driver (controladores), desbloquear
+        // (desbloquear) e instalar (verificar_imagenes, conectar, bloqueada, grabar_*, formatear_*)
+        static readonly Dictionary<string, string> Descarga = new Dictionary<string, string>
         {
-            { "herramientas", "herramientas" }, { "descargar", "descargar" }, { "comprobar zip", "comprobar_zip" },
-            { "descomprimir", "descomprimir" }, { "comprobar imágenes", "comprobar_imagenes" }, { "SHA256", "comprobar_imagenes" },
-            { "boot", "grabar_boot" }, { "recovery", "grabar_recovery" }, { "vendor", "grabar_vendor" }, { "system", "grabar_system" },
-            { "splash", "grabar_splash" }, { "cache", "formatear_cache" }, { "userdata", "formatear_userdata" }
+            { "herramientas", "herramientas" }, { "descargar", "descargar" }, { "zip", "comprobar_zip" },
+            { "descomprimir", "descomprimir" }, { "imagenes", "comprobar_imagenes" }
+        };
+        static readonly Dictionary<string, string> Instalacion = new Dictionary<string, string>
+        {
+            { "imagenes", "verificar_imagenes" }, { "boot", "grabar_boot" }, { "recovery", "grabar_recovery" },
+            { "vendor", "grabar_vendor" }, { "system", "grabar_system" }, { "splash", "grabar_splash" },
+            { "cache", "formatear_cache" }, { "userdata", "formatear_userdata" }
         };
 
         // El paso en el que ha fallado un trabajo
-        public static string Paso(string trabajo, List<Fase> pasos)
+        public static string Paso(string trabajo, List<Fase> pasos, string motivo)
         {
             if (trabajo == "driver") return "controladores";
             if (trabajo == "desbloquear") return "desbloquear";
+            var nombres = trabajo == "instalar" ? Instalacion : Descarga;
             if (pasos != null)
                 foreach (var f in pasos)
                 {
+                    if (f.Estado != "fallo") continue;
+                    if (f.Nombre == "askey") return motivo == "bloqueada" ? "bloqueada" : "conectar";
                     string n;
-                    if (f.Estado == "fallo" && Nombres.TryGetValue(f.Nombre, out n)) return n;
+                    if (nombres.TryGetValue(f.Nombre, out n)) return n;
                 }
-            // Antes del primer paso: en la instalación, la Askey ya no estaba en fastboot o se había bloqueado
             return trabajo == "instalar" ? "conectar" : trabajo;
         }
 
-        public static string Mensaje(string home, bool bien, string paso, long segundos)
+        // Clases de fallo que el panel sabe enseñar (solo se envían si el servidor las admite)
+        static readonly HashSet<string> Motivos = new HashSet<string>
+        {
+            "usb", "ocupado", "bloqueada", "tamano", "herramientas", "aparato", "fastboot", "desconectada", "no_responde",
+            "tiempo", "espacio", "red", "danado", "paquete", "driver", "sin_permiso", "conectar", "otro"
+        };
+
+        // resultado: ok | fallo | abandono (cerró la ventana sin instalar; paso = hasta dónde llegó)
+        public static string Mensaje(string home, string resultado, string paso, long segundos, string motivo = null)
         {
             var d = new Dictionary<string, object>
             {
-                { "v", 1 }, { "camino", "cable" }, { "instalador", Instalador }, { "home", home }, { "resultado", bien ? "ok" : "fallo" }
+                { "v", 1 }, { "camino", "cable" }, { "instalador", Instalador }, { "home", home }, { "resultado", resultado }
             };
-            if (!bien) d["paso"] = paso;
+            if (resultado != "ok") d["paso"] = paso;
+            if (resultado == "fallo" && motivo != null && Motivos.Contains(motivo) && Acepta.Contains("motivo")) d["motivo"] = motivo;
             d["duracion_s"] = Math.Max(0L, Math.Min(86400L, segundos));
             return new JavaScriptSerializer().Serialize(d);
+        }
+
+        static void Post(string mensaje, int espera)
+        {
+            byte[] cuerpo = Encoding.UTF8.GetBytes(mensaje);
+            var req = (HttpWebRequest)WebRequest.Create(Direccion);
+            req.Method = "POST";
+            req.ContentType = "application/json";
+            req.UserAgent = "Instalar-Home";
+            req.Timeout = espera;
+            req.ReadWriteTimeout = espera;
+            req.ContentLength = cuerpo.Length;
+            using (var s = req.GetRequestStream()) s.Write(cuerpo, 0, cuerpo.Length);
+            using (req.GetResponse()) { }
         }
 
         public static void Enviar(string mensaje, Estado e)
@@ -80,20 +128,24 @@ namespace HomeInstalador
             {
                 try
                 {
-                    byte[] cuerpo = Encoding.UTF8.GetBytes(mensaje);
-                    var req = (HttpWebRequest)WebRequest.Create(Direccion);
-                    req.Method = "POST";
-                    req.ContentType = "application/json";
-                    req.UserAgent = "Instalar-Home";
-                    req.Timeout = 5000;
-                    req.ReadWriteTimeout = 5000;
-                    req.ContentLength = cuerpo.Length;
-                    using (var s = req.GetRequestStream()) s.Write(cuerpo, 0, cuerpo.Length);
-                    using (req.GetResponse()) { }
+                    Post(mensaje, 8000);
                     e.Anotar("Instalación contada en las estadísticas de Home.");
                 }
-                catch (Exception) { e.Anotar("No se ha podido contar la instalación en las estadísticas (no afecta a nada)."); }
+                catch (WebException ex) { e.Anotar("No se ha podido contar en las estadísticas (no afecta a nada): " + Red.Explicar(ex)); }
+                catch (IOException ex) { e.Anotar("No se ha podido contar en las estadísticas (no afecta a nada): " + Red.Explicar(ex)); }
             });
+        }
+
+        // Al cerrar la ventana: el programa espera como mucho unos segundos a que salga. Si no llega, no queda nadie a
+        // quien contárselo: la ventana ya se ha cerrado
+        public static void EnviarAlCerrar(string mensaje)
+        {
+            new Thread(() =>
+            {
+                try { Post(mensaje, 4000); }
+                catch (WebException) { }
+                catch (IOException) { }
+            }) { IsBackground = false }.Start();
         }
 
         // ------------------------------------------------------------ informe de un fallo
@@ -151,9 +203,11 @@ namespace HomeInstalador
             return new JavaScriptSerializer().Serialize(d);
         }
 
-        // Lo envía y devuelve su código (H-7K3Q2M), o null si no ha llegado. Se llama fuera del hilo de la ventana
-        public static string EnviarInforme(string mensaje)
+        // Lo envía y devuelve su código (H-7K3Q2M). Si no llega, null y la causa en «fallo». Se llama fuera del hilo de
+        // la ventana
+        public static string EnviarInforme(string mensaje, out string fallo)
         {
+            fallo = "";
             try
             {
                 byte[] cuerpo = Encoding.UTF8.GetBytes(mensaje);
@@ -171,9 +225,13 @@ namespace HomeInstalador
                     var d = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(lector.ReadToEnd());
                     object c;
                     if (d != null && d.TryGetValue("codigo", out c) && c is string && Regex.IsMatch((string)c, "^H-[A-Z2-9]{6}$")) return (string)c;
+                    fallo = "El servidor no ha devuelto un código.";
                 }
             }
-            catch (Exception) { }
+            catch (WebException ex) { fallo = Red.Explicar(ex); }
+            catch (IOException ex) { fallo = Red.Explicar(ex); }
+            catch (ArgumentException) { fallo = "El servidor ha contestado algo que no se entiende."; }
+            catch (InvalidOperationException) { fallo = "El servidor ha contestado algo que no se entiende."; }
             return null;
         }
     }

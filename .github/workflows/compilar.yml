@@ -13,12 +13,32 @@ permissions:
 jobs:
   compilar:
     runs-on: windows-latest
+    env:
+      # Firma opcional: si el repositorio tiene estos secretos, el .exe sale firmado (compilar.cmd explica cómo). Sin
+      # ellos, o en las pull requests de otros repositorios, se compila sin firmar
+      FIRMA_PFX_BASE64: ${{ secrets.FIRMA_PFX_BASE64 }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Certificado de firma
+        if: env.FIRMA_PFX_BASE64 != ''
+        shell: pwsh
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'firma.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:FIRMA_PFX_BASE64))
+          "FIRMA_PFX=$pfx" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
       - name: Compilar
         shell: cmd
+        env:
+          FIRMA_CLAVE: ${{ secrets.FIRMA_CLAVE }}
+          FIRMA_SELLO: ${{ vars.FIRMA_SELLO }}
         run: compilar.cmd
+
+      - name: Borrar el certificado
+        if: always() && env.FIRMA_PFX != ''
+        shell: pwsh
+        run: Remove-Item -Force $env:FIRMA_PFX -ErrorAction SilentlyContinue
 
       - name: SHA256
         shell: pwsh
